@@ -55,7 +55,7 @@ class MushafPage extends StatelessWidget {
         return Container(
           color: const Color(0xFFF5F1E8), // Beige/cream background
           child: Container(
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: const Color(0xFFFFFBF5), // Lighter inner background
               border: Border.all(
@@ -64,7 +64,7 @@ class MushafPage extends StatelessWidget {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -139,40 +139,38 @@ class MushafPage extends StatelessWidget {
   Widget _buildVersesText(List<Verse> verses) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: SingleChildScrollView(
-        child: SelectableText.rich(
-          TextSpan(
-            children: verses.map((verse) {
-              final verseNum = int.parse(verse.verseKey.split(':')[1]);
-              final arabicNum = _toArabicNumber(verseNum);
-              
-              return TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${verse.textUthmani} ',
-                    style: const TextStyle(
-                      fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                      fontSize: 18,
-                      color: Colors.black87,
-                      height: 1.8,
-                      letterSpacing: 0.5,
-                    ),
+      child: SelectableText.rich(
+        TextSpan(
+          children: verses.map((verse) {
+            final verseNum = int.parse(verse.verseKey.split(':')[1]);
+            final arabicNum = _toArabicNumber(verseNum);
+            
+            return TextSpan(
+              children: [
+                TextSpan(
+                  text: '${verse.textUthmani} ',
+                  style: const TextStyle(
+                    fontFamily: 'KFGQPC Uthmanic Script HAFS',
+                    fontSize: 18,
+                    color: Colors.black87,
+                    height: 1.8,
+                    letterSpacing: 0.5,
                   ),
-                  TextSpan(
-                    text: '۝$arabicNum ',
-                    style: const TextStyle(
-                      fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                      fontSize: 16,
-                      color: Color(0xFFD4AF37),
-                      height: 1.8,
-                    ),
+                ),
+                TextSpan(
+                  text: '۝$arabicNum ',
+                  style: const TextStyle(
+                    fontFamily: 'KFGQPC Uthmanic Script HAFS',
+                    fontSize: 16,
+                    color: Color(0xFFD4AF37),
+                    height: 1.8,
                   ),
-                ],
-              );
-            }).toList(),
-          ),
-          textAlign: TextAlign.justify,
+                ),
+              ],
+            );
+          }).toList(),
         ),
+        textAlign: TextAlign.justify,
       ),
     );
   }
