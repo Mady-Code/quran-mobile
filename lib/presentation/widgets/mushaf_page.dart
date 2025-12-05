@@ -40,7 +40,17 @@ class MushafPage extends StatelessWidget {
           return const Center(child: Text('No verses found'));
         }
 
-        // Group verses by Surah
+        final surahs = context.read<QuranProvider>().surahs;
+        
+        // Determine the primary Surah for the page header (based on the first verse)
+        final firstVerse = verses.first;
+        final firstSurahId = int.parse(firstVerse.verseKey.split(':')[0]);
+        final headerSurah = surahs.firstWhere(
+          (s) => s.id == firstSurahId,
+          orElse: () => surahs.first,
+        );
+
+        // Group verses layout
         final Map<int, List<Verse>> versesBySurah = {};
         for (var verse in verses) {
           final chapterId = int.parse(verse.verseKey.split(':')[0]);
@@ -50,50 +60,106 @@ class MushafPage extends StatelessWidget {
           versesBySurah[chapterId]!.add(verse);
         }
 
-        final surahs = context.read<QuranProvider>().surahs;
-
         return Container(
-          color: const Color(0xFFF5F1E8), // Beige/cream background
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFBF5), // Lighter inner background
-              border: Border.all(
-                color: const Color(0xFFD4AF37),
-                width: 1,
+          color: const Color(0xFFEEEBE0), // Background behind the page
+          alignment: Alignment.center,
+          // Removed vertical padding to maximize screen usage
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: Container(
+              width: 420,  // Narrower to fit phone aspect ratio better
+              height: 880, // Taller
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBF0), // Page detail color
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Stack(
                 children: [
-                  // Build content for each surah on this page
-                  ...versesBySurah.entries.map((entry) {
-                    final chapterId = entry.key;
-                    final chapterVerses = entry.value;
-                    final surah = surahs.firstWhere(
-                      (s) => s.id == chapterId,
-                      orElse: () => surahs.first,
-                    );
-
-                    final isFirstVerse = chapterVerses.any((v) => v.verseKey.endsWith(':1'));
-
-                    return Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isFirstVerse) ...[
-                            _buildSurahHeader(surah),
-                            if (surah.id != 1 && surah.id != 9) _buildBismillah(),
-                          ],
-                          Expanded(
-                            child: _buildVersesText(chapterVerses),
-                          ),
-                        ],
+                  // Decorative Frame
+                  Positioned.fill(
+                    child: Container(
+                      margin: const EdgeInsets.all(8), // Reduced outer margin
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: const Color(0xFF4A4A4A),
+                          width: 2,
+                        ),
                       ),
-                    );
-                  }).toList(),
+                      child: Container(
+                        margin: const EdgeInsets.all(2), // Reduced spacing
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFD4AF37),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20), // Reduced content padding
+                    child: Column(
+                      children: [
+                        // Header
+                        _buildPageHeader(headerSurah, pageNumber),
+                        const SizedBox(height: 4), // Reduced spacing
+                        
+                        // Verses Body
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space
+                            children: [
+                               // Use a ListView or Column? Column is fine if we fit.
+                               // To mimic 15 lines, we want the text to expand.
+                              ...versesBySurah.entries.map((entry) {
+                                final chapterId = entry.key;
+                                final chapterVerses = entry.value;
+                                final surah = surahs.firstWhere(
+                                  (s) => s.id == chapterId,
+                                  orElse: () => surahs.first,
+                                );
+                                final isFirstVerseInSurah = chapterVerses.any((v) => v.verseKey.endsWith(':1'));
+
+                                return Expanded( // Allow specific surah block to take space
+                                  child: Column(
+                                    children: [
+                                      if (isFirstVerseInSurah) ...[
+                                        const SizedBox(height: 4),
+                                        _buildSurahBanner(surah),
+                                        if (surah.id != 1 && surah.id != 9) _buildBismillah(),
+                                      ],
+                                      Expanded(
+                                        child: _buildVersesText(chapterVerses),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+
+                        // Footer
+                        const SizedBox(height: 4),
+                        Text(
+                          _toArabicNumber(pageNumber),
+                          style: const TextStyle(
+                            fontFamily: 'KFGQPC Uthmanic Script HAFS',
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -103,18 +169,50 @@ class MushafPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSurahHeader(Surah surah) {
+  Widget _buildPageHeader(Surah surah, int pageNumber) {
+    return SizedBox(
+      height: 24, // Reduced height
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'الجزء ${_toArabicNumber(1)}', 
+            style: const TextStyle(
+              fontSize: 14,
+              fontFamily: 'KFGQPC Uthmanic Script HAFS',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            'سُورَةُ ${surah.nameArabic}',
+            style: const TextStyle(
+              fontSize: 14,
+              fontFamily: 'KFGQPC Uthmanic Script HAFS',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSurahBanner(Surah surah) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0EBE0),
+        border: Border.all(color: const Color(0xFFD4AF37), width: 1),
+      ),
       child: Center(
         child: Text(
-          surah.nameArabic,
+          'سُورَةُ ${surah.nameArabic}',
           style: const TextStyle(
             fontFamily: 'KFGQPC Uthmanic Script HAFS',
-            fontSize: 20,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Colors.black,
           ),
         ),
       ),
@@ -123,13 +221,13 @@ class MushafPage extends StatelessWidget {
 
   Widget _buildBismillah() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
         style: const TextStyle(
           fontFamily: 'KFGQPC Uthmanic Script HAFS',
-          fontSize: 18,
-          color: Colors.black87,
+          fontSize: 15, // Slightly smaller to fit
+          color: Colors.black,
         ),
         textAlign: TextAlign.center,
       ),
@@ -151,19 +249,18 @@ class MushafPage extends StatelessWidget {
                   text: '${verse.textUthmani} ',
                   style: const TextStyle(
                     fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                    fontSize: 18,
-                    color: Colors.black87,
-                    height: 1.8,
-                    letterSpacing: 0.5,
+                    fontSize: 22, // Increased font size
+                    color: Colors.black,
+                    height: 1.7, // Adjusted line height
                   ),
                 ),
                 TextSpan(
-                  text: '۝$arabicNum ',
+                  text: '﴿$arabicNum﴾ ',
                   style: const TextStyle(
                     fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                    fontSize: 16,
+                    fontSize: 18,
                     color: Color(0xFFD4AF37),
-                    height: 1.8,
+                    height: 1.7,
                   ),
                 ),
               ],
