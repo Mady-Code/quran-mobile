@@ -42,6 +42,7 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_svg: ^2.0.10+1
   cached_network_image: ^3.3.1
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +72,9 @@ flutter:
     - assets/json/chapters.json
     - assets/images/
     - assets/images/pages/
+    - assets/images/quran/hafs/
+    - assets/images/quran/warsh/
+    - assets/csv/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

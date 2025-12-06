@@ -18,12 +18,84 @@ class _HomeScreenState extends State<HomeScreen> {
     // Fetch surahs when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<QuranProvider>().fetchSurahs();
+      context.read<QuranProvider>().loadBookmarks();
+      context.read<QuranProvider>().loadInteractionData();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: Container(
+          color: const Color(0xFFFAF8F3),
+          child: Column(
+            children: [
+              DrawerHeader(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFD4AF37),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                       Icon(Icons.menu_book, size: 48, color: Colors.white),
+                       SizedBox(height: 10),
+                       Text(
+                        'Menu',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.bookmark, color: Color(0xFFD4AF37)),
+                title: const Text('Signets (Bookmarks)'),
+              ),
+              Expanded(
+                child: Consumer<QuranProvider>(
+                  builder: (context, provider, child) {
+                    final bookmarks = provider.bookmarks;
+                    if (bookmarks.isEmpty) {
+                      return const Center(child: Text('Aucun signet'));
+                    }
+                    return ListView.builder(
+                      itemCount: bookmarks.length,
+                      itemBuilder: (context, index) {
+                        final pageNum = bookmarks[index];
+                        return ListTile(
+                          title: Text('Page $pageNum'),
+                          subtitle: Text(provider.getSurahForPage(pageNum)?.nameSimple ?? 'Inconnu'),
+                          onTap: () {
+                            Navigator.pop(context); // Close drawer
+                            final surah = provider.getSurahForPage(pageNum);
+                            if (surah != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SurahDetailScreen(
+                                    surah: surah,
+                                    startPage: pageNum,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F1E8), // Beige/cream background
         elevation: 0,

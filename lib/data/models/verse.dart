@@ -25,4 +25,11 @@ class Verse {
       pageNumber: json['page_number'],
     );
   }
+  int get surahId {
+    return int.parse(verseKey.split(':')[0]);
+  }
+
+  int get verseNumber {
+    return int.parse(verseKey.split(':')[1]);
+  }
 }

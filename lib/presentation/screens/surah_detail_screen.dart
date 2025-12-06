@@ -9,8 +9,13 @@ import '../widgets/verse_search_delegate.dart';
 
 class SurahDetailScreen extends StatefulWidget {
   final Surah surah;
+  final int? startPage;
 
-  const SurahDetailScreen({super.key, required this.surah});
+  const SurahDetailScreen({
+    super.key, 
+    required this.surah,
+    this.startPage,
+  });
 
   @override
   State<SurahDetailScreen> createState() => _SurahDetailScreenState();
@@ -27,7 +32,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
     // Enable fullscreen immersive mode
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     
-    final initialPage = widget.surah.pages.isNotEmpty ? widget.surah.pages[0] : 1;
+    final initialPage = widget.startPage ?? (widget.surah.pages.isNotEmpty ? widget.surah.pages[0] : 1);
     _currentPage = initialPage;
     _pageController = PageController(initialPage: initialPage - 1);
   }
@@ -87,21 +92,21 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
       body: Stack(
         children: [
           // Main PageView - Full width
-          GestureDetector(
-            onTap: _toggleOverlay,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: 604,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index + 1;
-                });
-              },
-              itemBuilder: (context, index) {
-                final pageNumber = index + 1;
-                return MushafPage(pageNumber: pageNumber);
-              },
-            ),
+          PageView.builder(
+            controller: _pageController,
+            itemCount: 604,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index + 1;
+              });
+            },
+            itemBuilder: (context, index) {
+              final pageNumber = index + 1;
+              return MushafPage(
+                pageNumber: pageNumber,
+                onTap: _toggleOverlay,
+              );
+            },
           ),
           
           // Top overlay - Surah name
@@ -160,25 +165,137 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withOpacity(0.5),
+                      Colors.black.withOpacity(0.8),
                       Colors.transparent,
                     ],
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    'صفحة $_currentPage',
-                    style: const TextStyle(
-                      fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
+                child: Consumer<QuranProvider>(
+                  builder: (context, provider, child) {
+                    final isBookmarked = provider.isPageBookmarked(_currentPage);
+                    final isPlaying = provider.isPlaying;
+                    final isNightMode = provider.isNightMode;
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Bookmark Button (Direct)
+                            IconButton(
+                              icon: Icon(
+                                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                color: isBookmarked ? Colors.amber : Colors.white,
+                              ),
+                              onPressed: () => provider.toggleBookmark(_currentPage),
+                            ),
+                             // Audio Menu Button (Separate)
+                             IconButton(
+                              icon: const Icon(Icons.headphones, color: Colors.white),
+                              onPressed: () => _showAudioMenu(context, provider),
+                            ),
+                            // Settings Menu Button (Theme inside)
+                            IconButton(
+                              icon: const Icon(Icons.settings, color: Colors.white),
+                              onPressed: () => _showSettingsMenu(context, provider),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Page $_currentPage',
+                          style: const TextStyle(
+                            fontFamily: 'KFGQPC Uthmanic Script HAFS',
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
         ],
       ),
+    );
+  }
+
+  void _showSettingsMenu(BuildContext context, QuranProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: provider.isNightMode ? const Color(0xFF303030) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('Paramètres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+              const Divider(),
+              ListTile(
+                leading: Icon(provider.isNightMode ? Icons.wb_sunny : Icons.nightlight_round),
+                title: const Text('Mode Nuit'),
+                trailing: Switch(
+                  value: provider.isNightMode,
+                  onChanged: (_) {
+                    provider.toggleNightMode();
+                    Navigator.pop(context); 
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAudioMenu(BuildContext context, QuranProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isPlaying = provider.isPlaying;
+        return Container(
+          decoration: BoxDecoration(
+            color: provider.isNightMode ? const Color(0xFF303030) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('Lecture Audio', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+              const Divider(),
+              ListTile(
+                leading: Icon(isPlaying ? Icons.stop : Icons.play_arrow, size: 32, color: Colors.amber),
+                title: Text(isPlaying ? 'Arrêter la lecture' : 'Lire la page $_currentPage'),
+                subtitle: const Text('Récitateur : Mishary Rashid Alafasy'),
+                onTap: () {
+                   if (isPlaying) {
+                      provider.stopAudio();
+                   } else {
+                      provider.playPage(_currentPage);
+                   }
+                   Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
     );
   }
 }
