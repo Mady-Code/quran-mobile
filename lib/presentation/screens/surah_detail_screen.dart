@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../data/models/surah.dart';
-import '../../data/models/verse.dart';
+import '../../features/quran/domain/entities/surah.dart';
+import '../../features/quran/domain/entities/verse.dart';
 import '../providers/quran_provider.dart';
 import '../widgets/mushaf_page.dart';
 import '../widgets/verse_search_delegate.dart';
+import '../../core/theme/app_theme.dart';
 
 class SurahDetailScreen extends StatefulWidget {
   final Surah surah;
@@ -83,12 +84,18 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final surah = context.read<QuranProvider>().getSurahForPage(_currentPage) ?? widget.surah;
 
+    // We can use the provider's night mode setting to toggle theme locally if we supported full theme switching,
+    // but here we just handle specific UI elements for the overlay.
+    // The MushafPage itself handles the image inversion.
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.creamColor, // Match app theme
       body: Stack(
         children: [
           // Main PageView - Full width
@@ -122,7 +129,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.5),
+                      Colors.black.withOpacity(0.7),
                       Colors.transparent,
                     ],
                   ),
@@ -131,20 +138,19 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back, color: AppTheme.creamColor),
                       onPressed: () => Navigator.pop(context),
                     ),
                     Text(
                       surah.nameArabic,
-                      style: const TextStyle(
-                        fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      style: AppTheme.arabicText.copyWith(
+                        fontSize: 24,
+                        color: AppTheme.creamColor, 
+                        // Using cream for text on dark overlay
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.search, color: Colors.white),
+                      icon: const Icon(Icons.search, color: AppTheme.creamColor),
                       onPressed: _openSearch,
                     ),
                   ],
@@ -174,7 +180,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                   builder: (context, provider, child) {
                     final isBookmarked = provider.isPageBookmarked(_currentPage);
                     final isPlaying = provider.isPlaying;
-                    final isNightMode = provider.isNightMode;
+                    // final isNightMode = provider.isNightMode;
 
                     return Column(
                       mainAxisSize: MainAxisSize.min,
@@ -186,18 +192,18 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                             IconButton(
                               icon: Icon(
                                 isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                                color: isBookmarked ? Colors.amber : Colors.white,
+                                color: isBookmarked ? AppTheme.goldColor : AppTheme.creamColor,
                               ),
                               onPressed: () => provider.toggleBookmark(_currentPage),
                             ),
                              // Audio Menu Button (Separate)
                              IconButton(
-                              icon: const Icon(Icons.headphones, color: Colors.white),
+                              icon: const Icon(Icons.headphones, color: AppTheme.creamColor),
                               onPressed: () => _showAudioMenu(context, provider),
                             ),
                             // Settings Menu Button (Theme inside)
                             IconButton(
-                              icon: const Icon(Icons.settings, color: Colors.white),
+                              icon: const Icon(Icons.settings, color: AppTheme.creamColor),
                               onPressed: () => _showSettingsMenu(context, provider),
                             ),
                           ],
@@ -205,11 +211,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                         const SizedBox(height: 10),
                         Text(
                           'Page $_currentPage',
-                          style: const TextStyle(
-                            fontFamily: 'KFGQPC Uthmanic Script HAFS',
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
+                          style: AppTheme.subtitleStyle.copyWith(color: AppTheme.creamColor.withOpacity(0.8)),
                         ),
                       ],
                     );
@@ -229,21 +231,29 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: provider.isNightMode ? const Color(0xFF303030) : Colors.white,
+            color: provider.isNightMode ? const Color(0xFF303030) : AppTheme.creamColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('Paramètres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+               Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Paramètres', style: AppTheme.titleStyle.copyWith(
+                  color: provider.isNightMode ? Colors.white : AppTheme.blackText
+                )),
               ),
               const Divider(),
               ListTile(
-                leading: Icon(provider.isNightMode ? Icons.wb_sunny : Icons.nightlight_round),
-                title: const Text('Mode Nuit'),
+                leading: Icon(
+                  provider.isNightMode ? Icons.wb_sunny : Icons.nightlight_round,
+                  color: AppTheme.goldColor
+                ),
+                title: Text('Mode Nuit', style: AppTheme.bodyStyle.copyWith(
+                  color: provider.isNightMode ? Colors.white : AppTheme.blackText
+                )),
                 trailing: Switch(
+                  activeColor: AppTheme.goldColor,
                   value: provider.isNightMode,
                   onChanged: (_) {
                     provider.toggleNightMode();
@@ -267,20 +277,25 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
         final isPlaying = provider.isPlaying;
         return Container(
           decoration: BoxDecoration(
-            color: provider.isNightMode ? const Color(0xFF303030) : Colors.white,
+            color: provider.isNightMode ? const Color(0xFF303030) : AppTheme.creamColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('Lecture Audio', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+               Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Lecture Audio', style: AppTheme.titleStyle.copyWith(
+                   color: provider.isNightMode ? Colors.white : AppTheme.blackText
+                )),
               ),
               const Divider(),
               ListTile(
-                leading: Icon(isPlaying ? Icons.stop : Icons.play_arrow, size: 32, color: Colors.amber),
-                title: Text(isPlaying ? 'Arrêter la lecture' : 'Lire la page $_currentPage'),
+                leading: Icon(isPlaying ? Icons.stop : Icons.play_arrow, size: 32, color: AppTheme.goldColor),
+                title: Text(
+                  isPlaying ? 'Arrêter la lecture' : 'Lire la page $_currentPage',
+                  style: AppTheme.bodyStyle.copyWith(fontWeight: FontWeight.bold, color: provider.isNightMode ? Colors.white : AppTheme.blackText)
+                ),
                 subtitle: const Text('Récitateur : Mishary Rashid Alafasy'),
                 onTap: () {
                    if (isPlaying) {

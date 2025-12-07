@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../data/models/verse.dart';
-import '../../data/models/surah.dart';
+import '../../features/quran/domain/entities/verse.dart';
+import '../../features/quran/domain/entities/surah.dart';
 import '../providers/quran_provider.dart';
 
 class MushafPage extends StatelessWidget {

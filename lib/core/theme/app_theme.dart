@@ -1,68 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF00695C); // Deep Teal
-  static const Color secondaryColor = Color(0xFFB2DFDB); // Light Teal
-  static const Color accentColor = Color(0xFFD4AF37); // Gold
-  static const Color backgroundColor = Color(0xFFF8F5F2); // Cream/Off-white
-  static const Color surfaceColor = Colors.white;
-  static const Color errorColor = Color(0xFFB00020);
+  // Premium Colors
+  static const Color creamColor = Color(0xFFF5F1E8); // Background base
+  static const Color goldColor = Color(0xFFD4AF37);  // Primary Accent
+  static const Color darkGreen = Color(0xFF1A4D2E);  // Secondary Accent (optional, for depth)
+  static const Color blackText = Color(0xFF2D2D2D);  // Soft Black
+  static const Color greyText = Color(0xFF757575);   // Subtitles
 
-  // Text Styles
+  // Typography
   static TextStyle get arabicText => const TextStyle(
         fontFamily: 'KFGQPC Uthmanic Script HAFS',
+        fontSize: 28,
+        color: blackText,
+        height: 2.0, // Better line height for reading
+      );
+
+  static TextStyle get headingStyle => const TextStyle(
         fontSize: 24,
-        color: Colors.black,
+        fontWeight: FontWeight.bold,
+        color: blackText,
+      );
+      
+  static TextStyle get titleStyle => const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: blackText,
+      );
+
+  static TextStyle get bodyStyle => const TextStyle(
+        fontSize: 16,
+        color: blackText,
         height: 1.5,
       );
 
-  static TextStyle get headingStyle => GoogleFonts.outfit(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: primaryColor,
-      );
-
-  static TextStyle get bodyStyle => GoogleFonts.outfit(
-        fontSize: 16,
-        color: Colors.black87,
-      );
-
-  static TextStyle get subtitleStyle => GoogleFonts.outfit(
+  static TextStyle get subtitleStyle => const TextStyle(
         fontSize: 14,
-        color: Colors.black54,
+        color: greyText,
       );
 
   // Theme Data
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      primaryColor: primaryColor,
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: creamColor,
+      primaryColor: goldColor,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: surfaceColor,
-        background: backgroundColor,
-        error: errorColor,
+        seedColor: goldColor,
+        primary: goldColor,
+        secondary: darkGreen,
+        surface: Colors.white,
+        background: creamColor,
+        onPrimary: Colors.white,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: backgroundColor,
+        backgroundColor: creamColor,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: primaryColor),
+        iconTheme: const IconThemeData(color: blackText),
         titleTextStyle: headingStyle.copyWith(fontSize: 20),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: goldColor,
+        unselectedItemColor: Colors.grey, // Handled implicitly
+        selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+        elevation: 10,
       ),
       cardTheme: CardTheme(
-        color: surfaceColor,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        color: Colors.white,
+        elevation: 0, // Flat premium look
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: goldColor.withOpacity(0.2), width: 1), // Subtle border
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       ),
       textTheme: TextTheme(
         displayLarge: headingStyle,
+        titleLarge: titleStyle,
         bodyLarge: bodyStyle,
         bodyMedium: subtitleStyle,
       ),

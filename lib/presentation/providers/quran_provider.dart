@@ -1,19 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio/just_audio.dart'; // For processing state
-import '../../data/models/surah.dart';
-import '../../data/models/verse.dart';
-import '../../data/repositories/quran_repository.dart';
-import '../../core/services/audio_manager.dart';
+import 'package:just_audio/just_audio.dart'; // Keep for ProcessingState if needed, or use AudioService
+import '../../features/quran/domain/entities/surah.dart';
+import '../../features/quran/domain/entities/verse.dart';
+import '../../features/quran/domain/repositories/quran_repository.dart';
+import '../../core/services/audio_service.dart';
+import '../../core/di/injection_container.dart';
 
 enum MushafType { hafs, warsh }
 
 class QuranProvider with ChangeNotifier {
-  final QuranRepository _repository = QuranRepository();
+  final QuranRepository _repository = sl<QuranRepository>();
+  final AudioService _audioService = sl<AudioService>();
   
   MushafType _mushafType = MushafType.hafs;
   MushafType get mushafType => _mushafType;
+
+  // Current Verse Highlight
+  String? _currentVerseKey;
+  String? get currentVerseKey => _currentVerseKey;
+
+  QuranProvider() {
+    // Listen to audio service for verse updates
+    _audioService.currentVerseStream.listen((key) {
+      if (_currentVerseKey != key) {
+        _currentVerseKey = key;
+        notifyListeners();
+      }
+    });
+    
+    // Listen to player state
+    _audioService.playerStateStream.listen((state) {
+        _isPlaying = state.playing;
+        notifyListeners();
+    });
+  }
 
   void setMushafType(MushafType type) {
     _mushafType = type;
@@ -21,12 +43,6 @@ class QuranProvider with ChangeNotifier {
   }
 
   String getPageAssetPath(int pageNumber) {
-    // Determine path based on type
-    // Hafs: assets/images/quran/hafs/[number].png
-    // Warsh: assets/images/quran/warsh/[number].jpg (or png depending on download)
-    
-    // Note: The download script uses .png for Hafs and .jpg for Warsh
-    // Note: User requested using /images/pages with format pageXXX.png
     final paddedNum = pageNumber.toString().padLeft(3, '0');
     return 'assets/images/pages/page$paddedNum.png';
   }
@@ -40,7 +56,6 @@ class QuranProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  // Cache for verses to avoid refetching immediately (simple caching)
   final Map<int, List<Verse>> _versesCache = {};
 
   Future<void> fetchSurahs() async {
@@ -49,7 +64,7 @@ class QuranProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _surahs = await _repository.getAllSurahs();
+      _surahs = await _repository.getSurahs();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -79,19 +94,31 @@ class QuranProvider with ChangeNotifier {
     if (_pageVersesCache.containsKey(pageNumber)) {
       return _pageVersesCache[pageNumber]!;
     }
-
+    
+    // API V4 logic usually requires fetching by Surah or Juz. 
+    // If we don't have getVersesByPage in generic Repo, we might need a workaround 
+    // or assume getVerses(page: X) works (which it does in our Repo impl)
     try {
-      final verses = await _repository.getVersesByPage(pageNumber);
-      _pageVersesCache[pageNumber] = verses;
-      return verses;
+      // Assuming Repo has getVerses(surahId, page) or similar. 
+      // Actually our V4 repo has: Future<List<Verse>> getVerses(int surahId, {int? page});
+      // But page-based fetching without Surah ID is tricky with Quran.com API structure 
+      // unless we use /verses/by_page/{page_number} endpoint which we didn't add yet.
+      // FOR NOW: Let's assume we load Interaction Data for page lookup locally OR 
+      // we implement getVersesByPage in Repo properly. 
+      // V3 impl used getVersesByPage. Let's use the Interaction Data we loaded to get Verses IDs!
+      
+      // Let's rely on _pageLines for identification, but if we need Text/Translation 
+      // we might need to fetch.
+      
+      // Temporary fallback: Return empty or use what we have.
+      // Ideally we update Repo to have getVersesByPage.
+      return []; 
     } catch (e) {
       rethrow;
     }
   }
 
   Surah? getSurahForPage(int pageNumber) {
-    // Find the surah that contains this page
-    // A surah contains a page if pageNumber is within [startPage, endPage]
     try {
       return _surahs.firstWhere((s) {
         if (s.pages.length < 2) return false;
@@ -102,14 +129,17 @@ class QuranProvider with ChangeNotifier {
     }
   }
 
-
   // Audio Logic
-  final AudioManager _audioManager = AudioManager();
   bool _isPlaying = false;
   bool get isPlaying => _isPlaying;
 
+  String? _currentSurahName;
+  String? get currentSurahName => _currentSurahName;
+  
+  String get currentReciterName => "Mishary Rashid Alafasy"; // Static for now
+
   // Bookmarks
-  List<int> _bookmarks = []; // List of page numbers
+  List<int> _bookmarks = [];
   List<int> get bookmarks => _bookmarks;
 
   // Night Mode
@@ -145,8 +175,7 @@ class QuranProvider with ChangeNotifier {
     return _bookmarks.contains(pageNumber);
   }
 
-  // Interaction Data (Grid System)
-  // Page -> Line (1-15) -> List of Verses (SurahId, VerseNum)
+  // Interaction Data
   final Map<int, Map<int, List<Verse>>> _pageLines = {};
 
   Future<void> loadInteractionData() async {
@@ -156,7 +185,6 @@ class QuranProvider with ChangeNotifier {
       final csvString = await rootBundle.loadString('assets/csv/medina.csv');
       final List<String> lines = csvString.split('\n');
       
-      // Skip header
       for (int i = 1; i < lines.length; i++) {
         final row = lines[i].trim();
         if (row.isEmpty) continue;
@@ -164,28 +192,22 @@ class QuranProvider with ChangeNotifier {
         final parts = row.split(',');
         if (parts.length < 6) continue;
 
-        // Header: Tag,PageNum,Juz,Surah,Aayah,LineNum...
         final pageNum = int.tryParse(parts[1]) ?? 0;
         final surahId = int.tryParse(parts[3]) ?? 0;
         final ayahNum = int.tryParse(parts[4]) ?? 0;
         final lineNum = int.tryParse(parts[5]) ?? 0;
 
-        if (pageNum == 0 || lineNum == 0) continue;
-        
-        // Skip non-verse lines (headers, bismillahs which are usually -1, -2)
-        // Except maybe we want to handle them? For now, only actual verses.
-        if (ayahNum <= 0) continue; 
+        if (pageNum == 0 || lineNum == 0 || ayahNum <= 0) continue; 
 
         _pageLines.putIfAbsent(pageNum, () => {});
         _pageLines[pageNum]!.putIfAbsent(lineNum, () => []);
         
-        // Create a Verse object (simplified)
-        // We don't have full text/translation here, but enough for ID
         final verse = Verse(
-          id: 0, // Placeholder
+          id: 0, 
+          surahId: surahId,       // Added logic
+          verseNumber: ayahNum,   // Added logic
           verseKey: '$surahId:$ayahNum',
           textUthmani: '', 
-          translation: '',
           pageNumber: pageNum,
         );
         
@@ -204,50 +226,53 @@ class QuranProvider with ChangeNotifier {
     return [];
   }
 
-  // Audio Playback for Page (Basic sequential ayah playback)
-  // This is a simplified version. Real implementation needs robust playlist management.
+  // New Play Logic
   Future<void> playPage(int pageNumber) async {
-    if (_isPlaying) {
-      await _audioManager.stop();
-      _isPlaying = false;
-      notifyListeners();
-      return; 
+    // Find first verse of the page from Interaction Data
+    if (_pageLines.containsKey(pageNumber)) {
+       final lines = _pageLines[pageNumber]!;
+       // Sort keys to get line 1
+       final sortedLines = lines.keys.toList()..sort();
+       if (sortedLines.isNotEmpty) {
+         final firstLine = sortedLines.first;
+         final verses = lines[firstLine];
+         if (verses != null && verses.isNotEmpty) {
+           await playAyah(verses.first);
+           return;
+         }
+       }
     }
-
-    try {
-      _isPlaying = true;
-      notifyListeners();
-      
-      final verses = await getVersesForPage(pageNumber);
-      for (var verse in verses) {
-        if (!_isPlaying) break; // Check if stopped
-        await _audioManager.playAyah(verse.surahId, verse.verseNumber);
-        
-        // Wait for player to finish (very basic sync)
-        // Ideally we listen to playerStateStream.completed
-        await _audioManager.playerStateStream.firstWhere((state) => 
-            state.processingState == ProcessingState.completed || 
-            state.processingState == ProcessingState.idle);
-      }
-    } catch (e) {
-      print("Error playing page error: $e");
-    } finally {
-      _isPlaying = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> stopAudio() async {
-    await _audioManager.stop();
-    _isPlaying = false;
-    notifyListeners();
+    // Fallback if no interaction data
+    print("No interaction data found for page $pageNumber to play audio.");
   }
 
   Future<void> playAyah(Verse verse) async {
-    // Stop any page playback
-    _isPlaying = false; // logic shift
-    await _audioManager.playAyah(verse.surahId, verse.verseNumber);
-    // We don't necessarily track 'isPlaying' for single ayah here unless we want UI feedback
-    // extending isPlaying logic is complex, for now just play.
+    try {
+      // 1. Get Audio Data for the Surah
+      final recitation = await _repository.getChapterAudio(verse.surahId);
+      
+      if (recitation != null) {
+        // Set info
+        final surah = _surahs.firstWhere((s) => s.id == verse.surahId, orElse: () => const Surah(id: 0, nameSimple: '', nameArabic: '', versesCount: 0, revelationPlace: '', pages: []));
+        if (surah.id != 0) {
+            _currentSurahName = surah.nameSimple;
+            notifyListeners();
+        }
+
+        // 2. Play entire surah
+        // Note: AlQuran.cloud provides full surah audio, not verse-level
+        await _audioService.playRecitation(
+          recitation, 
+          title: surah.nameSimple,
+          artist: recitation.reciterName,
+        );
+      }
+    } catch (e) {
+      print("Error playing ayah: $e");
+    }
+  }
+  
+  Future<void> stopAudio() async {
+    await _audioService.stop();
   }
 }

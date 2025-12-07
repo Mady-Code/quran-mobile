@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../features/quran/domain/entities/surah.dart';
+import '../../features/quran/domain/entities/verse.dart';
 import '../providers/quran_provider.dart';
-import '../../data/models/verse.dart';
 
 class VerseSearchDelegate extends SearchDelegate<Verse?> {
   @override
@@ -86,7 +88,7 @@ class VerseSearchDelegate extends SearchDelegate<Verse?> {
           itemBuilder: (context, index) {
             final verse = results[index];
             final surah = provider.surahs.firstWhere(
-              (s) => s.id == int.parse(verse.verseKey.split(':')[0]),
+              (s) => s.id == int.parse((verse.verseKey ?? "1:1").split(':')[0]),
             );
 
             return ListTile(

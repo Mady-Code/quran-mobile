@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/providers/quran_provider.dart';
-import 'presentation/screens/home_screen.dart';
+import 'presentation/providers/settings_provider.dart';
+import 'presentation/screens/main_screen.dart';
+import 'core/di/injection_container.dart' as di;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await di.init();
   runApp(const QuranApp());
 }
 
@@ -15,14 +19,20 @@ class QuranApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => QuranProvider()),
+        ChangeNotifierProvider(
+          create: (_) => QuranProvider(),
+        ),
+        ChangeNotifierProvider.value(
+          value: di.sl<SettingsProvider>(),
+        ),
       ],
       child: MaterialApp(
         title: 'Quran App',
-        debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const HomeScreen(),
+        home: const MainScreen(),
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
 }
+
