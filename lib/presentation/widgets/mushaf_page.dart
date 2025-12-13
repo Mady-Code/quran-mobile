@@ -32,76 +32,63 @@ class MushafPage extends StatelessWidget {
 
         return Container(
           color: isNightMode ? const Color(0xFF202020) : const Color(0xFFFAF8F3),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return GestureDetector(
-                onTap: () {
-                  onTap?.call();
-                },
-                onLongPressStart: (details) {
-                  _handleLongPress(context, details, constraints, provider);
-                },
-                child: Center(
-                  child: ColorFiltered(
-                    colorFilter: isNightMode ? nightFilter : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
-                    child: Image.asset(
-                      imagePath,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Center(child: Icon(Icons.broken_image, size: 48, color: Colors.grey));
+          child: InteractiveViewer(
+            minScale: 1.0,
+            maxScale: 4.0,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 0.635, // Madinah page ratio
+                child: Builder(
+                  builder: (context) {
+                    return GestureDetector(
+                      onTap: () {
+                        onTap?.call();
                       },
-                    ),
-                  ),
+                      onLongPressStart: (details) {
+                        // Get the height of the RenderBox (which is the Image height)
+                        final RenderBox box = context.findRenderObject() as RenderBox;
+                        final double imageHeight = box.size.height;
+                        
+                        _handleLongPress(context, details, imageHeight, provider);
+                      },
+                      child: ColorFiltered(
+                        colorFilter: isNightMode ? nightFilter : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
+                        child: Image.asset(
+                          imagePath,
+                          fit: BoxFit.fill, // Fill the aspect ratio container
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(child: Icon(Icons.broken_image, size: 48, color: Colors.grey));
+                          },
+                        ),
+                      ),
+                    );
+                  }
                 ),
-              );
-            },
+              ),
+            ),
           ),
         );
       },
     );
   }
 
-  void _handleLongPress(BuildContext context, LongPressStartDetails details, BoxConstraints constraints, QuranProvider provider) {
-    // 1. Calculate Image Rendered Rect (As BoxFit.contain is used)
-    final double screenW = constraints.maxWidth;
-    final double screenH = constraints.maxHeight;
-    final double screenRatio = screenW / screenH;
-    
-    // Standard Madinah Page Ratio (approx)
-    const double imageRatio = 0.635; // 604/950 approx or 1024/1600
-
-    double imgW, imgH;
-    double offsetX = 0, offsetY = 0;
-
-    if (screenRatio > imageRatio) {
-      // Screen is wider -> Limited by Height
-      imgH = screenH;
-      imgW = imgH * imageRatio;
-      offsetX = (screenW - imgW) / 2;
-    } else {
-      // Screen is taller -> Limited by Width
-      imgW = screenW;
-      imgH = imgW / imageRatio;
-      offsetY = (screenH - imgH) / 2;
-    }
-
-    // 2. Map Tap to Line
+  void _handleLongPress(BuildContext context, LongPressStartDetails details, double imageHeight, QuranProvider provider) {
+    // 1. Get local Y coordinate on the image
     final double localY = details.localPosition.dy;
     
-    // Check if tap is within image vertical area
-    if (localY < offsetY || localY > offsetY + imgH) {
+    // Check bounds just in case (though GestureDetector shouldn't fire outside)
+    if (localY < 0 || localY > imageHeight) {
       return; 
     }
 
-    final double relativeY = localY - offsetY;
-    final double pctY = relativeY / imgH;
+    final double pctY = localY / imageHeight;
 
     // Simple 15 lines grid:
     final int line = (pctY * 15).floor() + 1; // 1-based
 
     if (line < 1 || line > 15) return;
 
-    // 3. Get Verses
+    // 2. Get Verses
     final verses = provider.getVersesForLine(pageNumber, line);
 
     if (verses.isNotEmpty) {
