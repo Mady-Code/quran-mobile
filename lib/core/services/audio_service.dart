@@ -146,6 +146,19 @@ class AudioService {
     await _player.play();
   }
   
+  Future<void> playAudioUrl(String url) async {
+    try {
+      print('🎵 Playing from URL: $url');
+      final audioSource = AudioSource.uri(Uri.parse(url));
+      await _player.setAudioSource(audioSource);
+      await _player.play();
+      print('✅ Playback started successfully');
+    } catch (e) {
+      print("❌ Error playing audio URL: $e");
+      rethrow;
+    }
+  }
+
   /// Play ayah with QUL segments for word-by-word highlighting
   Future<void> playAyahWithSegments(
     int surah,

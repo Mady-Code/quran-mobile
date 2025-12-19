@@ -37,7 +37,7 @@ class MushafPage extends StatelessWidget {
             maxScale: 4.0,
             child: Center(
               child: AspectRatio(
-                aspectRatio: 0.635, // Madinah page ratio
+                aspectRatio: 1024 / 1656, // actual asset ratio
                 child: Builder(
                   builder: (context) {
                     return GestureDetector(
@@ -55,7 +55,7 @@ class MushafPage extends StatelessWidget {
                         colorFilter: isNightMode ? nightFilter : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
                         child: Image.asset(
                           imagePath,
-                          fit: BoxFit.fill, // Fill the aspect ratio container
+                          fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return const Center(child: Icon(Icons.broken_image, size: 48, color: Colors.grey));
                           },

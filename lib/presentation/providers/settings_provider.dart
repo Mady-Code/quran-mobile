@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider extends ChangeNotifier {
-  static const String _reciterEditionKey = 'reciter_edition';
+  static const String _reciterIdKey = 'reciter_id';
   static const String _reciterNameKey = 'reciter_name';
   static const String _nightModeKey = 'night_mode';
   
   final SharedPreferences _prefs;
   
-  String _reciterEdition = 'ar.alafasy'; // Default: Mishary Rashid Alafasy
+  String _reciterId = '118'; // Default: Mishary Rashid Alafasy
   String _reciterName = 'Mishary Rashid Alafasy';
   bool _nightMode = false;
   
@@ -16,21 +16,21 @@ class SettingsProvider extends ChangeNotifier {
     _loadSettings();
   }
   
-  String get reciterEdition => _reciterEdition;
+  String get reciterId => _reciterId;
   String get reciterName => _reciterName;
   bool get nightMode => _nightMode;
   
   Future<void> _loadSettings() async {
-    _reciterEdition = _prefs.getString(_reciterEditionKey) ?? 'ar.alafasy';
+    _reciterId = _prefs.getString(_reciterIdKey) ?? '118';
     _reciterName = _prefs.getString(_reciterNameKey) ?? 'Mishary Rashid Alafasy';
     _nightMode = _prefs.getBool(_nightModeKey) ?? false;
     notifyListeners();
   }
   
-  Future<void> setReciter(String edition, String name) async {
-    _reciterEdition = edition;
+  Future<void> setReciter(String id, String name) async {
+    _reciterId = id;
     _reciterName = name;
-    await _prefs.setString(_reciterEditionKey, edition);
+    await _prefs.setString(_reciterIdKey, id);
     await _prefs.setString(_reciterNameKey, name);
     notifyListeners();
   }

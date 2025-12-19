@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/quran_provider.dart';
 import '../widgets/reciter_selection_dialog.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/di/injection_container.dart';
@@ -74,9 +75,11 @@ class SettingsScreen extends StatelessWidget {
             showDialog(
               context: context,
               builder: (context) => ReciterSelectionDialog(
-                currentReciterEdition: settings.reciterEdition,
-                onReciterSelected: (edition, name) {
-                  settings.setReciter(edition, name);
+                currentReciterId: settings.reciterId,
+                onReciterSelected: (id, name) {
+                  // Update Settings Provider (Persist)
+                  settings.setReciter(id, name);
+                  
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('✅ Reciter changed to $name'),

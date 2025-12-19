@@ -6,13 +6,17 @@ import '../../features/quran/domain/entities/surah.dart';
 import '../../features/quran/domain/entities/verse.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../core/services/audio_service.dart';
+import '../../core/api/qul_service.dart';
+import '../../core/cache/models/qul_recitation_model.dart';
 import '../../core/di/injection_container.dart';
+import 'settings_provider.dart';
 
 enum MushafType { hafs, warsh }
 
 class QuranProvider with ChangeNotifier {
   final QuranRepository _repository = sl<QuranRepository>();
   final AudioService _audioService = sl<AudioService>();
+  final QulService _qulService = QulService(); // Direct instantiation for now, or use sl<QulService>() if registered
   
   MushafType _mushafType = MushafType.hafs;
   MushafType get mushafType => _mushafType;
@@ -136,7 +140,9 @@ class QuranProvider with ChangeNotifier {
   String? _currentSurahName;
   String? get currentSurahName => _currentSurahName;
   
-  String get currentReciterName => "Mishary Rashid Alafasy"; // Static for now
+  // Reciter info delegated to SettingsProvider
+  String get currentReciterId => sl<SettingsProvider>().reciterId;
+  String get currentReciterName => sl<SettingsProvider>().reciterName;
 
   // Bookmarks
   List<int> _bookmarks = [];
@@ -248,25 +254,23 @@ class QuranProvider with ChangeNotifier {
 
   Future<void> playAyah(Verse verse) async {
     try {
-      // 1. Get Audio Data for the Surah
-      final recitation = await _repository.getChapterAudio(verse.surahId);
+      // 1. Get Audio URL from QulService using SettingsProvider for ID
+      final reciterId = sl<SettingsProvider>().reciterId;
+      final audioUrl = _qulService.getAyahAudioUrl(reciterId, verse.surahId, verse.verseNumber);
       
-      if (recitation != null) {
-        // Set info
-        final surah = _surahs.firstWhere((s) => s.id == verse.surahId, orElse: () => const Surah(id: 0, nameSimple: '', nameArabic: '', versesCount: 0, revelationPlace: '', pages: []));
-        if (surah.id != 0) {
-            _currentSurahName = surah.nameSimple;
-            notifyListeners();
-        }
-
-        // 2. Play entire surah
-        // Note: AlQuran.cloud provides full surah audio, not verse-level
-        await _audioService.playRecitation(
-          recitation, 
-          title: surah.nameSimple,
-          artist: recitation.reciterName,
-        );
+      // Set info
+      final surah = _surahs.firstWhere((s) => s.id == verse.surahId, orElse: () => const Surah(id: 0, nameSimple: '', nameArabic: '', versesCount: 0, revelationPlace: '', pages: []));
+      if (surah.id != 0) {
+          _currentSurahName = surah.nameSimple;
+          notifyListeners();
       }
+
+      // 2. Play using AudioService
+      await _audioService.playAudioUrl(audioUrl);
+      
+      // Note: We are now playing Ayah by Ayah. 
+      // Auto-play next logic would need to be implemented in AudioService listener or here if desired.
+      
     } catch (e) {
       print("Error playing ayah: $e");
     }

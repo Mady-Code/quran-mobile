@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../core/di/injection_container.dart';
-import '../../core/api/alquran_api.dart';
-import '../../features/quran/domain/entities/reciter.dart';
+import '../../core/api/qul_service.dart';
+import '../../core/cache/models/qul_recitation_model.dart';
 import '../../core/theme/app_theme.dart';
 
 class ReciterSelectionDialog extends StatefulWidget {
-  final String currentReciterEdition;
+  final String currentReciterId;
   final Function(String, String) onReciterSelected;
 
   const ReciterSelectionDialog({
     Key? key,
-    required this.currentReciterEdition,
+    required this.currentReciterId,
     required this.onReciterSelected,
   }) : super(key: key);
 
@@ -19,7 +19,8 @@ class ReciterSelectionDialog extends StatefulWidget {
 }
 
 class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
-  List<Reciter> _reciters = [];
+  final QulService _qulService = QulService();
+  List<QulReciter> _reciters = [];
   bool _isLoading = true;
 
   @override
@@ -31,8 +32,8 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
   Future<void> _loadReciters() async {
     try {
       setState(() {
-        // Get reciters from AlQuranApi (no API call needed!)
-        _reciters = AlQuranApi.getAvailableReciters();
+        // Get reciters from QulService
+        _reciters = _qulService.getReciters();
         _isLoading = false;
       });
     } catch (e) {
@@ -59,7 +60,7 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
                 itemCount: _reciters.length,
                 itemBuilder: (context, index) {
                   final reciter = _reciters[index];
-                  final isSelected = reciter.edition == widget.currentReciterEdition;
+                  final isSelected = reciter.id == widget.currentReciterId;
                   
                   return ListTile(
                     title: Text(reciter.name),
@@ -69,7 +70,7 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
                         : null,
                     selected: isSelected,
                     onTap: () {
-                      widget.onReciterSelected(reciter.edition, reciter.name);
+                      widget.onReciterSelected(reciter.id, reciter.name);
                       Navigator.pop(context);
                     },
                   );
