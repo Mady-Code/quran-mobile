@@ -11,15 +11,14 @@ import '../../core/cache/models/qul_recitation_model.dart';
 import '../../core/di/injection_container.dart';
 import 'settings_provider.dart';
 
-enum MushafType { hafs, warsh }
+import '../../features/quran/domain/entities/mushaf_type.dart';
 
 class QuranProvider with ChangeNotifier {
   final QuranRepository _repository = sl<QuranRepository>();
   final AudioService _audioService = sl<AudioService>();
   final QulService _qulService = QulService(); // Direct instantiation for now, or use sl<QulService>() if registered
   
-  MushafType _mushafType = MushafType.hafs;
-  MushafType get mushafType => _mushafType;
+  MushafType get mushafType => sl<SettingsProvider>().mushafType;
 
   // Current Verse Highlight
   String? _currentVerseKey;
@@ -39,16 +38,15 @@ class QuranProvider with ChangeNotifier {
         _isPlaying = state.playing;
         notifyListeners();
     });
+
+    // Listen to settings for mushafType changes
+    sl<SettingsProvider>().addListener(notifyListeners);
   }
 
-  void setMushafType(MushafType type) {
-    _mushafType = type;
-    notifyListeners();
-  }
 
   String getPageAssetPath(int pageNumber) {
     final paddedNum = pageNumber.toString().padLeft(3, '0');
-    return 'assets/images/pages/page$paddedNum.png';
+    return 'assets/images/Qiraat/${mushafType.name}/$paddedNum.svg';
   }
 
   List<Surah> _surahs = [];

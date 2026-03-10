@@ -71,7 +71,7 @@ class AppTheme {
         unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
         elevation: 10,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0, // Flat premium look
         shape: RoundedRectangleBorder(

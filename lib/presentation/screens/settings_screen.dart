@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/quran_provider.dart';
 import '../widgets/reciter_selection_dialog.dart';
+import '../widgets/mushaf_selection_dialog.dart';
+import '../../features/quran/domain/entities/mushaf_type.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/di/injection_container.dart';
 import '../../core/cache/cache_service.dart';
@@ -36,6 +38,7 @@ class SettingsScreen extends StatelessWidget {
           
           // Display Section
           _buildSectionHeader('DISPLAY'),
+          _buildMushafTile(context),
           _buildNightModeTile(context),
           
           const Divider(height: 32),
@@ -134,6 +137,51 @@ class SettingsScreen extends StatelessWidget {
         }
       },
     );
+  }
+
+  Widget _buildMushafTile(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        return ListTile(
+          leading: const Icon(Icons.menu_book, color: AppTheme.goldColor),
+          title: const Text('Qiraat (Style de Mushaf)'),
+          subtitle: Text(_getMushafLabel(settings.mushafType)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => MushafSelectionDialog(
+                currentType: settings.mushafType,
+                onTypeSelected: (type) {
+                  settings.setMushafType(type);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('✅ Style de Mushaf changé en ${_getMushafLabel(type)}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _getMushafLabel(MushafType type) {
+    switch (type) {
+      case MushafType.hafs:
+        return 'Hafs (Medina)';
+      case MushafType.warsh:
+        return 'Warsh';
+      case MushafType.shubah:
+        return 'Shub\'ah';
+      case MushafType.qalon:
+        return 'Qalon';
+      case MushafType.douri:
+        return 'Ad-Douri';
+    }
   }
 
   Widget _buildNightModeTile(BuildContext context) {

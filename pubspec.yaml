@@ -78,6 +78,11 @@ flutter:
     - assets/json/chapters.json
     - assets/images/
     - assets/images/pages/
+    - assets/images/Qiraat/hafs/
+    - assets/images/Qiraat/warsh/
+    - assets/images/Qiraat/shubah/
+    - assets/images/Qiraat/qalon/
+    - assets/images/Qiraat/douri/
     - assets/csv/
 
   # An image asset can refer to one or more resolution-specific "variants", see

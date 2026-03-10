@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../features/quran/domain/entities/verse.dart';
 import '../../features/quran/domain/entities/surah.dart';
@@ -53,12 +54,12 @@ class MushafPage extends StatelessWidget {
                       },
                       child: ColorFiltered(
                         colorFilter: isNightMode ? nightFilter : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
-                        child: Image.asset(
+                        child: SvgPicture.asset(
                           imagePath,
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(child: Icon(Icons.broken_image, size: 48, color: Colors.grey));
-                          },
+                          placeholderBuilder: (BuildContext context) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
                         ),
                       ),
                     );

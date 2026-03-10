@@ -1,0 +1,229 @@
+[
+    {
+        "id": 1,
+        "name": "\u0645\u0635\u062d\u0641 \u062d\u0641\u0635",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/1-min.png",
+        "bismillah": "",
+        "font_file": null,
+        "images": "https:\/\/api.quranpedia.net\/api-quran-svg\/hafs.zip",
+        "images_png": "https:\/\/api.quranpedia.net\/api-quran-png\/hafs.zip",
+        "rawi": {
+            "id": 10,
+            "full_name": "",
+            "name": "",
+            "qiraa": {
+                "id": 5,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 6,
+                    "name": "\u0627\u0644\u0643\u0648\u0641\u064a"
+                }
+            }
+        }
+    },
+    {
+        "id": 2,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/Standard-70.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicHafs1Ex1Ver12.otf",
+        "rawi": {
+            "id": 10,
+            "full_name": "",
+            "name": "",
+            "qiraa": {
+                "id": 5,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 6,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 3,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/Nastaliq70.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/HafsNastaleeqVer10.otf",
+        "rawi": {
+            "id": 10,
+            "full_name": "",
+            "name": "\u062d\u0641\u0635",
+            "qiraa": {
+                "id": 5,
+                "short_name": "\u0639\u0627\u0635\u0645",
+                "full_name": "",
+                "count": {
+                    "id": 6,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 4,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/Warsh.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/KFGQPCWarshUthmanicScript-Regul.woff2",
+        "images": "https:\/\/api.quranpedia.net\/api-quran-svg\/warsh.zip",
+        "images_png": "https:\/\/api.quranpedia.net\/api-quran-png\/warsh.zip",
+        "rawi": {
+            "id": 2,
+            "full_name": "",
+            "name": "",
+            "qiraa": {
+                "id": 1,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 2,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 5,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/translate-soon.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicBazzi1Ver06.otf",
+        "rawi": {
+            "id": 3,
+            "full_name": "",
+            "name": "",
+            "qiraa": {
+                "id": 2,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 3,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 6,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/Douri_Final-PSD.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicDoori1Ver05.otf",
+        "images": "https:\/\/api.quranpedia.net\/api-quran-svg\/douri.zip",
+        "images_png": "https:\/\/api.quranpedia.net\/api-quran-png\/douri.zip",
+        "rawi": {
+            "id": 5,
+            "full_name": "",
+            "name": "",
+            "qiraa": {
+                "id": 3,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 4,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 7,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/Qaloun.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicQaloon1Ver05.otf",
+        "images": "https:\/\/api.quranpedia.net\/api-quran-svg\/qalon.zip",
+        "images_png": "https:\/\/api.quranpedia.net\/api-quran-png\/qalon.zip",
+        "rawi": {
+            "id": 1,
+            "full_name": "",
+            "qiraa": {
+                "id": 1,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 2,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 8,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/translate-soon.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicQumbul1Ver05.otf",
+        "rawi": {
+            "id": 4,
+            "full_name": "",
+            "qiraa": {
+                "id": 2,
+                "short_name": "\u0627\u0628\u0646 \u0643\u062b\u064a\u0631",
+                "full_name": "",
+                "count": {
+                    "id": 3,
+                    "name": "\u0627\u0644\u0645\u0643\u064a"
+                }
+            }
+        }
+    },
+    {
+        "id": 9,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/Shuba.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicShouba1Ver05.otf",
+        "images": "https:\/\/api.quranpedia.net\/api-quran-svg\/shubah.zip",
+        "images_png": "https:\/\/api.quranpedia.net\/api-quran-png\/shubah.zip",
+        "rawi": {
+            "id": 9,
+            "full_name": "",
+            "name": "",
+            "qiraa": {
+                "id": 5,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 6,
+                    "name": ""
+                }
+            }
+        }
+    },
+    {
+        "id": 10,
+        "name": "",
+        "description": "",
+        "image": "https:\/\/api.quranpedia.net\/front\/assets\/img\/mushafs\/translate-soon.jpg",
+        "bismillah": "",
+        "font_file": "https:\/\/api.quranpedia.net\/fonts\/UthmanicSoosi1Ver05.otf",
+        "rawi": {
+            "id": 6,
+            "full_name": "",
+            "qiraa": {
+                "id": 3,
+                "short_name": "",
+                "full_name": "",
+                "count": {
+                    "id": 4,
+                    "name": ""
+                }
+            }
+        }
+    }
+]
