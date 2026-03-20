@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../providers/settings_provider.dart';
 import '../../features/quran/domain/entities/mushaf_type.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -16,12 +15,11 @@ class MushafSelectionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Sélectionner le Style de Mushaf'),
-      backgroundColor: AppTheme.creamColor,
+      title: const Text('Select Qiraat Style'),
       content: SizedBox(
-        width: double.maxFinite,
+        width: 300,
+        height: MediaQuery.of(context).size.height * 0.4,
         child: ListView.builder(
-          shrinkWrap: true,
           itemCount: MushafType.values.length,
           itemBuilder: (context, index) {
             final type = MushafType.values[index];
@@ -31,11 +29,12 @@ class MushafSelectionDialog extends StatelessWidget {
               title: Text(
                 _getMushafLabel(type),
                 style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppTheme.darkGreen : Colors.black87,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? AppTheme.darkGreen : null,
                 ),
               ),
-              trailing: isSelected 
+              trailing: isSelected
                   ? const Icon(Icons.check_circle, color: AppTheme.darkGreen)
                   : null,
               onTap: () {
@@ -46,6 +45,12 @@ class MushafSelectionDialog extends StatelessWidget {
           },
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ],
     );
   }
 
@@ -56,7 +61,7 @@ class MushafSelectionDialog extends StatelessWidget {
       case MushafType.warsh:
         return 'Warsh';
       case MushafType.shubah:
-        return 'Shub\'ah';
+        return "Shu'bah";
       case MushafType.qalon:
         return 'Qalon';
       case MushafType.douri:

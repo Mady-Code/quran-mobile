@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
-import '../providers/quran_provider.dart';
 import '../widgets/reciter_selection_dialog.dart';
 import '../widgets/mushaf_selection_dialog.dart';
 import '../../features/quran/domain/entities/mushaf_type.dart';
@@ -9,63 +8,87 @@ import '../../core/theme/app_theme.dart';
 import '../../core/di/injection_container.dart';
 import '../../core/cache/cache_service.dart';
 
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  Map<String, int> _cacheStats = {'surahs': 0, 'recitations': 0};
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshCacheStats();
+  }
+
+  void _refreshCacheStats() {
+    final stats = sl<CacheService>().getStats();
+    if (mounted) setState(() => _cacheStats = stats);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.creamColor,
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: AppTheme.creamColor,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
-          // Audio Section
-          _buildSectionHeader('AUDIO'),
+          _buildSectionHeader('Audio'),
           _buildReciterTile(context),
-          
+
           const Divider(height: 32),
-          
-          // Cache Section
-          _buildSectionHeader('CACHE'),
+
+          _buildSectionHeader('Cache'),
           _buildCacheStatsTile(context),
           _buildClearCacheTile(context),
-          
+
           const Divider(height: 32),
-          
-          // Display Section
-          _buildSectionHeader('DISPLAY'),
+
+          _buildSectionHeader('Display'),
           _buildMushafTile(context),
           _buildNightModeTile(context),
-          
+
           const Divider(height: 32),
-          
-          // About Section
-          _buildSectionHeader('ABOUT'),
+
+          _buildSectionHeader('About'),
           _buildAboutTile(context),
         ],
       ),
     );
   }
 
+  // ── Section header ─────────────────────────────────────────────────────────
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: AppTheme.darkGreen,
-          letterSpacing: 1.2,
-        ),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppTheme.goldColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.darkGreen,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  // ── Reciter ────────────────────────────────────────────────────────────────
   Widget _buildReciterTile(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
@@ -77,15 +100,13 @@ class SettingsScreen extends StatelessWidget {
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => ReciterSelectionDialog(
+              builder: (_) => ReciterSelectionDialog(
                 currentReciterId: settings.reciterId,
                 onReciterSelected: (id, name) {
-                  // Update Settings Provider (Persist)
                   settings.setReciter(id, name);
-                  
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('✅ Reciter changed to $name'),
+                      content: Text('Reciter changed to $name'),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -98,18 +119,15 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  // ── Cache stats ────────────────────────────────────────────────────────────
   Widget _buildCacheStatsTile(BuildContext context) {
-    final cacheService = sl<CacheService>();
-    final stats = cacheService.getStats();
-    
     return ListTile(
       leading: const Icon(Icons.storage, color: AppTheme.goldColor),
       title: const Text('Cache Statistics'),
-      subtitle: Text('Surahs: ${stats['surahs']}, Recitations: ${stats['recitations']}'),
+      subtitle: Text(
+          'Surahs: ${_cacheStats['surahs']}, Recitations: ${_cacheStats['recitations']}'),
       trailing: const Icon(Icons.chevron_right),
-      onTap: () {
-        _showCacheStatsDialog(context, stats);
-      },
+      onTap: () => _showCacheStatsDialog(context, _cacheStats),
     );
   }
 
@@ -124,14 +142,12 @@ class SettingsScreen extends StatelessWidget {
           'Clear Cache?',
           'This will delete all cached data. The app will re-download data when needed.',
         );
-        
         if (confirm == true) {
-          final cacheService = sl<CacheService>();
-          await cacheService.clearAll();
-          
+          await sl<CacheService>().clearAll();
+          _refreshCacheStats();
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('✅ Cache cleared successfully')),
+              const SnackBar(content: Text('Cache cleared successfully')),
             );
           }
         }
@@ -139,24 +155,26 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  // ── Display ────────────────────────────────────────────────────────────────
   Widget _buildMushafTile(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
         return ListTile(
           leading: const Icon(Icons.menu_book, color: AppTheme.goldColor),
-          title: const Text('Qiraat (Style de Mushaf)'),
+          title: const Text('Qiraat Style'),
           subtitle: Text(_getMushafLabel(settings.mushafType)),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => MushafSelectionDialog(
+              builder: (_) => MushafSelectionDialog(
                 currentType: settings.mushafType,
                 onTypeSelected: (type) {
                   settings.setMushafType(type);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('✅ Style de Mushaf changé en ${_getMushafLabel(type)}'),
+                      content: Text(
+                          'Qiraat style changed to ${_getMushafLabel(type)}'),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -176,7 +194,7 @@ class SettingsScreen extends StatelessWidget {
       case MushafType.warsh:
         return 'Warsh';
       case MushafType.shubah:
-        return 'Shub\'ah';
+        return "Shu'bah";
       case MushafType.qalon:
         return 'Qalon';
       case MushafType.douri:
@@ -192,14 +210,13 @@ class SettingsScreen extends StatelessWidget {
           title: const Text('Night Mode'),
           subtitle: const Text('Dark theme for comfortable reading'),
           value: settings.nightMode,
-          activeColor: AppTheme.goldColor,
-          onChanged: (value) {
+          onChanged: (_) {
             settings.toggleNightMode();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(value 
-                    ? '🌙 Night mode enabled' 
-                    : '☀️ Night mode disabled'),
+                content: Text(settings.nightMode
+                    ? 'Night mode disabled'
+                    : 'Night mode enabled'),
                 duration: const Duration(seconds: 2),
               ),
             );
@@ -209,6 +226,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  // ── About ──────────────────────────────────────────────────────────────────
   Widget _buildAboutTile(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.info_outline, color: AppTheme.goldColor),
@@ -218,27 +236,29 @@ class SettingsScreen extends StatelessWidget {
       onTap: () {
         showAboutDialog(
           context: context,
-          applicationName: 'Quran App',
+          applicationName: 'Al-Quran',
           applicationVersion: '1.0.0',
-          applicationIcon: const Icon(Icons.book, size: 48, color: AppTheme.goldColor),
-          children: [
-            const Text('A beautiful Quran app with offline-first architecture.'),
-            const SizedBox(height: 16),
-            const Text('Features:'),
-            const Text('• 114 Surahs with Uthmanic script'),
-            const Text('• Multiple reciters'),
-            const Text('• Offline caching'),
-            const Text('• Premium UI/UX'),
+          applicationIcon:
+              const Icon(Icons.book, size: 48, color: AppTheme.goldColor),
+          children: const [
+            Text('A beautiful Quran app with offline-first architecture.'),
+            SizedBox(height: 16),
+            Text('Features:'),
+            Text('• 114 Surahs with Uthmanic script'),
+            Text('• Multiple reciters'),
+            Text('• Offline caching'),
+            Text('• Night mode'),
           ],
         );
       },
     );
   }
 
+  // ── Dialogs ────────────────────────────────────────────────────────────────
   void _showCacheStatsDialog(BuildContext context, Map<String, int> stats) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Cache Statistics'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -249,7 +269,7 @@ class SettingsScreen extends StatelessWidget {
             _buildStatRow('Recitations cached', '${stats['recitations']}'),
             const SizedBox(height: 16),
             const Text(
-              'Cached data loads 10-15x faster than loading from JSON or API.',
+              'Cached data loads significantly faster than fetching from the network.',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -281,13 +301,10 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<bool?> _showConfirmDialog(
-    BuildContext context,
-    String title,
-    String message,
-  ) {
+      BuildContext context, String title, String message) {
     return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: Text(title),
         content: Text(message),
         actions: [

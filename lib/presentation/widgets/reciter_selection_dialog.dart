@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/di/injection_container.dart';
 import '../../core/api/qul_service.dart';
 import '../../core/cache/models/qul_recitation_model.dart';
 import '../../core/theme/app_theme.dart';
@@ -9,10 +8,10 @@ class ReciterSelectionDialog extends StatefulWidget {
   final Function(String, String) onReciterSelected;
 
   const ReciterSelectionDialog({
-    Key? key,
+    super.key,
     required this.currentReciterId,
     required this.onReciterSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<ReciterSelectionDialog> createState() => _ReciterSelectionDialogState();
@@ -31,44 +30,45 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
 
   Future<void> _loadReciters() async {
     try {
-      setState(() {
-        // Get reciters from QulService
-        _reciters = _qulService.getReciters();
-        _isLoading = false;
-      });
+      final reciters = _qulService.getReciters();
+      if (mounted) {
+        setState(() {
+          _reciters = reciters;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final maxHeight = MediaQuery.of(context).size.height * 0.55;
+
     return AlertDialog(
       title: const Text('Select Reciter'),
-      content: _isLoading
-          ? const SizedBox(
-              height: 200,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : SizedBox(
-              width: double.maxFinite,
-              height: 400,
-              child: ListView.builder(
-                shrinkWrap: true,
+      content: SizedBox(
+        width: 300,
+        height: _isLoading ? 120 : maxHeight,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView.builder(
                 itemCount: _reciters.length,
                 itemBuilder: (context, index) {
                   final reciter = _reciters[index];
-                  final isSelected = reciter.id == widget.currentReciterId;
-                  
+                  final isSelected =
+                      reciter.id == widget.currentReciterId;
+
                   return ListTile(
                     title: Text(reciter.name),
                     subtitle: Text(reciter.style),
-                    trailing: isSelected 
-                        ? const Icon(Icons.check, color: AppTheme.goldColor) 
+                    trailing: isSelected
+                        ? const Icon(Icons.check, color: AppTheme.goldColor)
                         : null,
                     selected: isSelected,
+                    selectedTileColor:
+                        AppTheme.goldColor.withOpacity(0.06),
                     onTap: () {
                       widget.onReciterSelected(reciter.id, reciter.name);
                       Navigator.pop(context);
@@ -76,7 +76,7 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
                   );
                 },
               ),
-            ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),

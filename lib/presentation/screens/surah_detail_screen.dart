@@ -239,7 +239,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             children: [
                Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text('Paramètres', style: AppTheme.titleStyle.copyWith(
+                child: Text('Display Settings', style: AppTheme.titleStyle.copyWith(
                   color: provider.isNightMode ? Colors.white : AppTheme.blackText
                 )),
               ),
@@ -249,7 +249,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                   provider.isNightMode ? Icons.wb_sunny : Icons.nightlight_round,
                   color: AppTheme.goldColor
                 ),
-                title: Text('Mode Nuit', style: AppTheme.bodyStyle.copyWith(
+                title: Text('Night Mode', style: AppTheme.bodyStyle.copyWith(
                   color: provider.isNightMode ? Colors.white : AppTheme.blackText
                 )),
                 trailing: Switch(
@@ -285,7 +285,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             children: [
                Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text('Lecture Audio', style: AppTheme.titleStyle.copyWith(
+                child: Text('Audio Playback', style: AppTheme.titleStyle.copyWith(
                    color: provider.isNightMode ? Colors.white : AppTheme.blackText
                 )),
               ),
@@ -293,10 +293,10 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
               ListTile(
                 leading: Icon(isPlaying ? Icons.stop : Icons.play_arrow, size: 32, color: AppTheme.goldColor),
                 title: Text(
-                  isPlaying ? 'Arrêter la lecture' : 'Lire la page $_currentPage',
+                  isPlaying ? 'Stop playback' : 'Play page $_currentPage',
                   style: AppTheme.bodyStyle.copyWith(fontWeight: FontWeight.bold, color: provider.isNightMode ? Colors.white : AppTheme.blackText)
                 ),
-                subtitle: const Text('Récitateur : Mishary Rashid Alafasy'),
+                subtitle: const Text('Reciter: Mishary Rashid Alafasy'),
                 onTap: () {
                    if (isPlaying) {
                       provider.stopAudio();

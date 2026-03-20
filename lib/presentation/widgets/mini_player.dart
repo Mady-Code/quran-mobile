@@ -10,16 +10,18 @@ class MiniPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<QuranProvider>(
       builder: (context, provider, child) {
-        // Hide if not playing and no surah selected (initial state)
         if (provider.currentSurahName == null) {
           return const SizedBox.shrink();
         }
+
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final bgColor = isDark ? AppTheme.darkCard : AppTheme.blackText;
 
         return Container(
           height: 64,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF2D2D2D), // Dark background for contrast
+            color: bgColor,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -31,11 +33,11 @@ class MiniPlayer extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Album Art / Icon
+              // Album art thumbnail
               Container(
                 width: 64,
                 decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withOpacity(0.2),
+                  color: AppTheme.goldColor.withOpacity(0.15),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
@@ -46,57 +48,59 @@ class MiniPlayer extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              
-              // Text Info
+
+              // Track info
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      provider.currentSurahName ?? "Select Surah",
-                      style: AppTheme.titleStyle.copyWith(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                      provider.currentSurahName!,
+                      style: AppTheme.titleStyle
+                          .copyWith(color: Colors.white, fontSize: 14),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       provider.currentReciterName,
-                      style: AppTheme.subtitleStyle.copyWith(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
+                      style: AppTheme.subtitleStyle
+                          .copyWith(color: Colors.white60, fontSize: 11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              
-              // Controls
-              IconButton(
-                icon: Icon(
-                  provider.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                  color: AppTheme.goldColor,
-                  size: 40,
+
+              // Play / Pause
+              Tooltip(
+                message: provider.isPlaying ? 'Pause' : 'Play',
+                child: IconButton(
+                  icon: Icon(
+                    provider.isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_filled,
+                    color: AppTheme.goldColor,
+                    size: 40,
+                  ),
+                  onPressed: provider.isPlaying
+                      ? provider.pauseAudio
+                      : provider.resumeAudio,
                 ),
-                onPressed: () {
-                   if (provider.isPlaying) {
-                     provider.stopAudio();
-                   } else {
-                     // Resume logic is needed in Provider or this button just stops?
-                     // Currently Provider only has playAyah and stopAudio.
-                     // Stop mostly resets player. Resume depends on AudioService state.
-                     // For now, let's assume stop acts as pause/stop.
-                     // TODO: Implement Resume in Provider
-                     provider.stopAudio(); 
-                   }
-                },
               ),
-              const SizedBox(width: 8),
+
+              // Stop
+              Tooltip(
+                message: 'Stop',
+                child: IconButton(
+                  icon: const Icon(Icons.stop_circle_outlined,
+                      color: Colors.white54, size: 32),
+                  onPressed: provider.stopAudio,
+                ),
+              ),
+              const SizedBox(width: 4),
             ],
           ),
         );

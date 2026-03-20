@@ -26,13 +26,18 @@ class QuranApp extends StatelessWidget {
           value: di.sl<SettingsProvider>(),
         ),
       ],
-      child: MaterialApp(
-        title: 'Quran App',
-        theme: AppTheme.lightTheme,
-        home: const MainScreen(),
-        debugShowCheckedModeBanner: false,
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'Al-Quran',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settings.nightMode ? ThemeMode.dark : ThemeMode.light,
+            home: const MainScreen(),
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }
 }
-
