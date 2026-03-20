@@ -2,6 +2,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import '../../features/quran/domain/entities/recitation.dart';
 import '../api/alquran_api.dart';
 import '../api/qul_service.dart';
@@ -19,8 +21,60 @@ class AudioService {
   // Playlist management
   ConcatenatingAudioSource? _playlist;
 
+  Map<String, dynamic>? _segmentsData;
+  Map<int, String>? _surahAudioUrls;
+  int? _currentSurahId;
+  String _currentReciterIdForData = '';
+
   Future<void> init() async {
-    // Optional configuration can go here
+    // Basic init if needed
+  }
+
+  Future<void> loadReciterData(String reciterId, String reciterName, String? audioAssets) async {
+    if (_currentReciterIdForData == reciterId) return;
+    
+    _currentReciterIdForData = reciterId;
+    _surahAudioUrls = {};
+    _segmentsData = null;
+
+    try {
+      String folderPath;
+      if (audioAssets != null && audioAssets.isNotEmpty) {
+        folderPath = 'assets/$audioAssets';
+      } else {
+        final slug = reciterName.toLowerCase().trim().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'-+$'), '');
+        folderPath = 'assets/json/read/qul/surah-recitation-$slug';
+      }
+
+      String audioJsonPath = '$folderPath/surah.json';
+      String segmentsJsonPath = '$folderPath/segments.json';
+
+      String jsonString;
+      try {
+        jsonString = await rootBundle.loadString(audioJsonPath);
+      } catch (e) {
+        if (reciterId == '118' || reciterId == '418') { // Mishari fallback
+          jsonString = await rootBundle.loadString('assets/json/read/surahs_audio.json');
+          segmentsJsonPath = 'assets/json/read/segments.json';
+        } else {
+          rethrow;
+        }
+      }
+
+      final surahsAudioMappings = jsonDecode(jsonString) as Map<String, dynamic>;
+      surahsAudioMappings.forEach((key, value) {
+        final surahId = int.tryParse(key);
+        if (surahId != null && value['audio_url'] != null) {
+          _surahAudioUrls![surahId] = value['audio_url'];
+        }
+      });
+      
+      final segmentsJsonString = await rootBundle.loadString(segmentsJsonPath);
+      _segmentsData = jsonDecode(segmentsJsonString);
+      print('✅ Successfully loaded JSON data for reciter $reciterName');
+    } catch (e) {
+      print('⚠️ Fallback or no JSON data for reciter $reciterName ($e)');
+    }
   }
 
   Future<void> play() async {
@@ -54,9 +108,25 @@ class AudioService {
   int _currentSegmentIndex = -1;
   
   // Stream of current verse key based on audio position
-  // Note: AlQuran.cloud provides full surah audio without verse-level timestamps
-  // So we can't track individual verses anymore
-  Stream<String?> get currentVerseStream => Stream.value(null);
+  Stream<String?> get currentVerseStream => _player.positionStream.map((position) {
+    if (_currentSurahId == null || _segmentsData == null) return null;
+    final ms = position.inMilliseconds;
+    
+    // Check segments for the active surah to find current verse
+    for (int ayah = 1; ayah <= 286; ayah++) {
+      final key = '$_currentSurahId:$ayah';
+      final ayahData = _segmentsData![key];
+      if (ayahData == null) break;
+      
+      if (ayahData is Map<String, dynamic>) {
+        final fromMs = ayahData['timestamp_from'] as int;
+        final toMs = ayahData['timestamp_to'] as int;
+        if (ms >= fromMs && ms <= toMs) return key;
+      }
+    }
+    
+    return null;
+  }).distinct();
   
   // Stream of current segment (for QUL word highlighting)
   Stream<int?> get currentSegmentStream => _player.positionStream.map((position) {
@@ -146,15 +216,43 @@ class AudioService {
     await _player.play();
   }
   
-  Future<void> playAudioUrl(String url) async {
+  Future<void> playSurahStream(int surahId, int startAyah, String reciterId) async {
     try {
-      print('🎵 Playing from URL: $url');
-      final audioSource = AudioSource.uri(Uri.parse(url));
+      Duration seekPos = Duration.zero;
+      final key = '$surahId:$startAyah';
+      if (_segmentsData != null && _segmentsData!.containsKey(key)) {
+         final ayahData = _segmentsData![key];
+         if (ayahData is Map<String, dynamic>) {
+           final fromMs = ayahData['timestamp_from'] as int;
+           seekPos = Duration(milliseconds: fromMs);
+         }
+      }
+
+      if (_currentSurahId == surahId && _player.audioSource != null) {
+          await _player.seek(seekPos);
+          await _player.play();
+          return;
+      }
+
+      _currentSurahId = surahId;
+      String? audioUrl;
+      
+      if (_surahAudioUrls != null && _surahAudioUrls!.containsKey(surahId)) {
+        audioUrl = _surahAudioUrls![surahId];
+      } else {
+        audioUrl = QulService().getSurahAudioUrl(reciterId, surahId);
+      }
+      
+      if (audioUrl == null) return;
+
+      print('🎵 Playing Surah Stream: $audioUrl');
+      final audioSource = AudioSource.uri(Uri.parse(audioUrl));
       await _player.setAudioSource(audioSource);
+      await _player.seek(seekPos);
       await _player.play();
-      print('✅ Playback started successfully');
+      print('✅ Surah Stream started successfully');
     } catch (e) {
-      print("❌ Error playing audio URL: $e");
+      print("❌ Error playing surah stream: $e");
       rethrow;
     }
   }

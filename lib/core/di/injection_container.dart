@@ -35,9 +35,9 @@ Future<void> init() async {
     ),
   );
 
-  // Services
-  sl.registerLazySingleton(() => AudioService());
-  
+  final audioService = AudioService();
+  await audioService.init();
+  sl.registerSingleton<AudioService>(audioService);
   // Storage (Hive) - Already initialized via CacheService
 }
 

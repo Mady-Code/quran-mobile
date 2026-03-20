@@ -4,6 +4,7 @@ class QulReciter {
   final String style;
   final String format; // 'Ayah by Ayah' or 'Surah by Surah'
   final bool hasSegments;
+  final String? audioAssets;
   
   const QulReciter({
     required this.id,
@@ -11,6 +12,7 @@ class QulReciter {
     required this.style,
     required this.format,
     required this.hasSegments,
+    this.audioAssets,
   });
 }
 

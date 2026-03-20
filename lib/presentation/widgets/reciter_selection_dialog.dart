@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 
 class ReciterSelectionDialog extends StatefulWidget {
   final String currentReciterId;
-  final Function(String, String) onReciterSelected;
+  final Function(String, String, String?) onReciterSelected;
 
   const ReciterSelectionDialog({
     super.key,
@@ -30,7 +30,7 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
 
   Future<void> _loadReciters() async {
     try {
-      final reciters = _qulService.getReciters();
+      final reciters = await _qulService.getReciters();
       if (mounted) {
         setState(() {
           _reciters = reciters;
@@ -70,7 +70,7 @@ class _ReciterSelectionDialogState extends State<ReciterSelectionDialog> {
                     selectedTileColor:
                         AppTheme.goldColor.withOpacity(0.06),
                     onTap: () {
-                      widget.onReciterSelected(reciter.id, reciter.name);
+                      widget.onReciterSelected(reciter.id, reciter.name, reciter.audioAssets);
                       Navigator.pop(context);
                     },
                   );

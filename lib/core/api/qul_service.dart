@@ -1,50 +1,31 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import '../cache/models/qul_recitation_model.dart';
 
 class QulService {
   final Dio _dio = Dio();
   static const String _baseUrl = 'https://qul.tarteel.ai';
   
-  /// Get list of available reciters
-  /// For now, we use a curated list of popular reciters with segments
-  List<QulReciter> getReciters() {
-    return [
-      const QulReciter(
-        id: '118',
-        name: 'Mishary Rashid Alafasy',
-        style: 'Murattal',
-        format: 'Ayah by Ayah',
-        hasSegments: true,
-      ),
-      const QulReciter(
-        id: '102',
-        name: 'Abdur-Rahman as-Sudais',
-        style: 'Murattal',
-        format: 'Ayah by Ayah',
-        hasSegments: true,
-      ),
-      const QulReciter(
-        id: '105',
-        name: 'Mohamed Siddiq al-Minshawi',
-        style: 'Murattal',
-        format: 'Ayah by Ayah',
-        hasSegments: true,
-      ),
-      const QulReciter(
-        id: '117',
-        name: 'Abu Bakr al-Shatri',
-        style: 'Murattal',
-        format: 'Ayah by Ayah',
-        hasSegments: true,
-      ),
-      const QulReciter(
-        id: '110',
-        name: 'Mahmoud Khalil Al-Husary',
-        style: 'Murattal',
-        format: 'Ayah by Ayah',
-        hasSegments: true,
-      ),
-    ];
+  /// Get list of available reciters from JSON file
+  Future<List<QulReciter>> getReciters() async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/json/read/qul_reciters.json');
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      return jsonList.map((item) {
+        return QulReciter(
+          id: item['id'] as String,
+          name: item['name'] as String,
+          style: item['style'] as String? ?? '',
+          format: item['format'] as String? ?? '',
+          hasSegments: item['has_segments'] as bool? ?? false,
+          audioAssets: item['audio_assets'] as String?,
+        );
+      }).toList();
+    } catch (e) {
+      print('Error loading reciters: $e');
+      return [];
+    }
   }
   
   /// Download recitation data (JSON format)

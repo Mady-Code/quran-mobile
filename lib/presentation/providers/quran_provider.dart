@@ -127,7 +127,8 @@ class QuranProvider with ChangeNotifier {
     try {
       _currentVerse = verse;
       final reciterId = sl<SettingsProvider>().reciterId;
-      final audioUrl = _qulService.getAyahAudioUrl(reciterId, verse.surahId, verse.verseNumber);
+      final reciterName = sl<SettingsProvider>().reciterName;
+      final audioAssets = sl<SettingsProvider>().reciterAudioAssets;
 
       final surah = _surahs.firstWhere(
         (s) => s.id == verse.surahId,
@@ -138,7 +139,8 @@ class QuranProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      await _audioService.playAudioUrl(audioUrl);
+      await _audioService.loadReciterData(reciterId, reciterName, audioAssets);
+      await _audioService.playSurahStream(verse.surahId, verse.verseNumber, reciterId);
     } catch (e) {
       print('Error playing ayah: $e');
     }

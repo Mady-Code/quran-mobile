@@ -76,6 +76,24 @@ flutter:
   assets:
     - assets/json/quran.json
     - assets/json/chapters.json
+    - assets/json/read/
+    - assets/json/read/qul/
+    - assets/json/read/qul/surah-recitation-abdul-basit-abd-us-samad-mujawwad/
+    - assets/json/read/qul/surah-recitation-abdul-rahman-al-sudais/
+    - assets/json/read/qul/surah-recitation-abdullah-ali-jabir/
+    - assets/json/read/qul/surah-recitation-abdullah-basfar/
+    - assets/json/read/qul/surah-recitation-abdullah-matroud/
+    - assets/json/read/qul/surah-recitation-abdur-rashid-sufi-soosi/
+    - assets/json/read/qul/surah-recitation-adel-kalbani/
+    - assets/json/read/qul/surah-recitation-ahmad-alnufais/
+    - assets/json/read/qul/surah-recitation-hady-toure/
+    - assets/json/read/qul/surah-recitation-maher-al-muaiqly/
+    - assets/json/read/qul/surah-recitation-mahmoud-khaleel-al-husary-with-children/
+    - assets/json/read/qul/surah-recitation-mishari-rashid-al-afasy/
+    - assets/json/read/qul/surah-recitation-noreen-siddiq-ad-doori-an-abi-amr/
+    - assets/json/read/qul/surah-recitation-saad-ghamadi/
+    - assets/json/read/qul/surah-recitation-saud-al-shuraim/
+    - assets/json/read/qul/surah-recitation-yasser-al-dosari/
     - assets/images/
     - assets/images/pages/
     - assets/images/Qiraat/hafs/

@@ -102,8 +102,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context: context,
               builder: (_) => ReciterSelectionDialog(
                 currentReciterId: settings.reciterId,
-                onReciterSelected: (id, name) {
-                  settings.setReciter(id, name);
+                onReciterSelected: (id, name, audioAssets) {
+                  settings.setReciter(id, name, audioAssets);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Reciter changed to $name'),
