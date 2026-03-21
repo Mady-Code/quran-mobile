@@ -96,6 +96,14 @@
     "audio_assets": "json/read/qul/surah-recitation-adel-kalbani"
   },
   {
+    "id": "334",
+    "name": "Mahmoud Khaleel Al-Husary",
+    "style": "",
+    "format": "",
+    "has_segments": true,
+    "audio_assets": "json/read/qul/surah-recitation-mahmoud-khaleel-al-husary"
+  },
+  {
     "id": "332",
     "name": "Mahmoud Khaleel Al-Husary (with Children)",
     "style": "",
