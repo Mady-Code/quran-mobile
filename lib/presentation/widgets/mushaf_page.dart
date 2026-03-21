@@ -38,26 +38,26 @@ class MushafPage extends StatelessWidget {
           child: InteractiveViewer(
             minScale: 1.0,
             maxScale: 4.0,
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 1024 / 1656,
-                child: Builder(
-                  builder: (context) => GestureDetector(
-                    onTap: onTap,
-                    onLongPressStart: (details) {
-                      final RenderBox box =
-                          context.findRenderObject() as RenderBox;
-                      _handleLongPress(
-                          context, details, box.size.height, provider);
-                    },
-                    child: ColorFiltered(
-                      colorFilter: isNightMode
-                          ? nightFilter
-                          : const ColorFilter.mode(
-                              Colors.transparent, BlendMode.dst),
+            child: SizedBox.expand(
+              child: Builder(
+                builder: (context) => GestureDetector(
+                  onTap: onTap,
+                  onLongPressStart: (details) {
+                    final RenderBox box =
+                        context.findRenderObject() as RenderBox;
+                    _handleLongPress(
+                        context, details, box.size.height, provider);
+                  },
+                  child: ColorFiltered(
+                    colorFilter: isNightMode
+                        ? nightFilter
+                        : const ColorFilter.mode(
+                            Colors.transparent, BlendMode.dst),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 25.0),
                       child: SvgPicture.asset(
                         imagePath,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.fill, // Étire l'image pour remplir l'écran (sans marge, sans débordement)
                         placeholderBuilder: (_) => const SizedBox(
                           width: 40,
                           height: 40,
