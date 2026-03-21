@@ -15,93 +15,134 @@ class MiniPlayer extends StatelessWidget {
         }
 
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final bgColor = isDark ? AppTheme.darkCard : AppTheme.blackText;
+        final bgColor = isDark ? AppTheme.darkElevated : const Color(0xFF1C1C1E);
 
         return Container(
-          height: 64,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          height: 68,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 10,
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Row(
-            children: [
-              // Album art thumbnail
-              Container(
-                width: 64,
-                decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withOpacity(0.15),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                // ── Progress indicator at top ───────────────────────────
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: StreamBuilder<Duration?>(
+                    stream: provider.durationStream,
+                    builder: (context, durationSnap) {
+                      final duration = durationSnap.data ?? Duration.zero;
+                      return StreamBuilder<Duration>(
+                        stream: provider.positionStream,
+                        builder: (context, positionSnap) {
+                          final position = positionSnap.data ?? Duration.zero;
+                          final clamped =
+                              position > duration ? duration : position;
+                          final progress = duration.inMilliseconds > 0
+                              ? clamped.inMilliseconds /
+                                  duration.inMilliseconds
+                              : 0.0;
+                          return LinearProgressIndicator(
+                            value: progress.clamp(0.0, 1.0),
+                            minHeight: 2.5,
+                            backgroundColor:
+                                Colors.white.withOpacity(0.12),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppTheme.goldColor),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
-                child: const Center(
-                  child: Icon(Icons.music_note, color: AppTheme.goldColor),
-                ),
-              ),
-              const SizedBox(width: 12),
 
-              // Track info
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider.currentSurahName!,
-                      style: AppTheme.titleStyle
-                          .copyWith(color: Colors.white, fontSize: 14),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      provider.currentReciterName,
-                      style: AppTheme.subtitleStyle
-                          .copyWith(color: Colors.white60, fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
+                // ── Player content ──────────────────────────────────────
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      // Album icon
+                      Container(
+                        width: 52,
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppTheme.goldColor.withOpacity(0.15),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.mosque_rounded,
+                              color: AppTheme.goldColor, size: 22),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
 
-              // Play / Pause
-              Tooltip(
-                message: provider.isPlaying ? 'Pause' : 'Play',
-                child: IconButton(
-                  icon: Icon(
-                    provider.isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                    color: AppTheme.goldColor,
-                    size: 40,
+                      // Track info
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              provider.currentSurahName!,
+                              style: AppTheme.titleStyle.copyWith(
+                                  color: Colors.white, fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              provider.currentReciterName,
+                              style: AppTheme.subtitleStyle
+                                  .copyWith(color: Colors.white54, fontSize: 11),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Play / Pause
+                      IconButton(
+                        icon: Icon(
+                          provider.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: AppTheme.goldColor,
+                          size: 32,
+                        ),
+                        onPressed: provider.isPlaying
+                            ? provider.pauseAudio
+                            : provider.resumeAudio,
+                        tooltip: provider.isPlaying ? 'Pause' : 'Play',
+                      ),
+
+                      // Stop
+                      IconButton(
+                        icon: const Icon(Icons.stop_rounded,
+                            color: Colors.white38, size: 24),
+                        onPressed: provider.stopAudio,
+                        tooltip: 'Stop',
+                      ),
+                      const SizedBox(width: 2),
+                    ],
                   ),
-                  onPressed: provider.isPlaying
-                      ? provider.pauseAudio
-                      : provider.resumeAudio,
                 ),
-              ),
-
-              // Stop
-              Tooltip(
-                message: 'Stop',
-                child: IconButton(
-                  icon: const Icon(Icons.stop_circle_outlined,
-                      color: Colors.white54, size: 32),
-                  onPressed: provider.stopAudio,
-                ),
-              ),
-              const SizedBox(width: 4),
-            ],
+              ],
+            ),
           ),
         );
       },

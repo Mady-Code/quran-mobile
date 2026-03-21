@@ -24,6 +24,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -35,38 +37,39 @@ class _MainScreenState extends State<MainScreen> {
           const MiniPlayer(),
           Container(
             decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, -4),
+              border: Border(
+                top: BorderSide(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.06)
+                      : Colors.black.withOpacity(0.06),
+                  width: 1,
                 ),
-              ],
+              ),
             ),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) => setState(() => _currentIndex = index),
-              type: BottomNavigationBarType.fixed,
-              showUnselectedLabels: true,
-              items: const [
-                BottomNavigationBarItem(
+            child: NavigationBar(
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (index) =>
+                  setState(() => _currentIndex = index),
+              animationDuration: const Duration(milliseconds: 300),
+              destinations: const [
+                NavigationDestination(
                   icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
+                  selectedIcon: Icon(Icons.home_rounded),
                   label: 'Home',
                 ),
-                BottomNavigationBarItem(
+                NavigationDestination(
                   icon: Icon(Icons.menu_book_outlined),
-                  activeIcon: Icon(Icons.menu_book),
+                  selectedIcon: Icon(Icons.menu_book_rounded),
                   label: 'Mushaf',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.audiotrack_outlined),
-                  activeIcon: Icon(Icons.audiotrack),
+                NavigationDestination(
+                  icon: Icon(Icons.headphones_outlined),
+                  selectedIcon: Icon(Icons.headphones_rounded),
                   label: 'Audio',
                 ),
-                BottomNavigationBarItem(
+                NavigationDestination(
                   icon: Icon(Icons.settings_outlined),
-                  activeIcon: Icon(Icons.settings),
+                  selectedIcon: Icon(Icons.settings_rounded),
                   label: 'Settings',
                 ),
               ],

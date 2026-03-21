@@ -31,84 +31,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppTheme.darkBackground : AppTheme.creamColor;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        children: [
-          _buildSectionHeader('Audio'),
-          _buildReciterTile(context),
+      backgroundColor: bgColor,
+      body: CustomScrollView(
+        slivers: [
+          // ── App bar ─────────────────────────────────────────────────────
+          SliverAppBar(
+            pinned: true,
+            title: const Text('Settings'),
+            backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+          ),
 
-          const Divider(height: 32),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── Audio section ─────────────────────────────────────────
+                _SectionCard(
+                  icon: Icons.headphones_rounded,
+                  title: 'Audio',
+                  isDark: isDark,
+                  children: [
+                    _buildReciterTile(context),
+                  ],
+                ),
+                const SizedBox(height: 14),
 
-          _buildSectionHeader('Cache'),
-          _buildCacheStatsTile(context),
-          _buildClearCacheTile(context),
+                // ── Display section ───────────────────────────────────────
+                _SectionCard(
+                  icon: Icons.palette_outlined,
+                  title: 'Display',
+                  isDark: isDark,
+                  children: [
+                    _buildMushafTile(context),
+                    const _TileDivider(),
+                    _buildNightModeTile(context),
+                  ],
+                ),
+                const SizedBox(height: 14),
 
-          const Divider(height: 32),
+                // ── Cache section ─────────────────────────────────────────
+                _SectionCard(
+                  icon: Icons.storage_rounded,
+                  title: 'Cache',
+                  isDark: isDark,
+                  children: [
+                    _buildCacheStatsTile(context),
+                    const _TileDivider(),
+                    _buildClearCacheTile(context),
+                  ],
+                ),
+                const SizedBox(height: 14),
 
-          _buildSectionHeader('Display'),
-          _buildMushafTile(context),
-          _buildNightModeTile(context),
-
-          const Divider(height: 32),
-
-          _buildSectionHeader('About'),
-          _buildAboutTile(context),
+                // ── About section ─────────────────────────────────────────
+                _SectionCard(
+                  icon: Icons.info_outline_rounded,
+                  title: 'About',
+                  isDark: isDark,
+                  children: [
+                    _buildAboutTile(context),
+                  ],
+                ),
+              ]),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // ── Section header ─────────────────────────────────────────────────────────
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 16,
-            decoration: BoxDecoration(
-              color: AppTheme.goldColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.darkGreen,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Reciter ────────────────────────────────────────────────────────────────
+  // ── Reciter ──────────────────────────────────────────────────────────────
   Widget _buildReciterTile(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
-        return ListTile(
-          leading: const Icon(Icons.person, color: AppTheme.goldColor),
-          title: const Text('Reciter'),
-          subtitle: Text(settings.reciterName),
-          trailing: const Icon(Icons.chevron_right),
+        return _SettingsTile(
+          icon: Icons.person_rounded,
+          title: 'Reciter',
+          subtitle: settings.reciterName,
+          trailing: const Icon(Icons.chevron_right_rounded,
+              color: AppTheme.greyText),
           onTap: () {
-            showDialog(
+            showModalBottomSheet(
               context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
               builder: (_) => ReciterSelectionDialog(
                 currentReciterId: settings.reciterId,
                 onReciterSelected: (id, name, audioAssets) {
                   settings.setReciter(id, name, audioAssets);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Reciter changed to $name'),
-                      duration: const Duration(seconds: 2),
-                    ),
+                    SnackBar(content: Text('Reciter changed to $name')),
                   );
                 },
               ),
@@ -119,28 +134,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ── Cache stats ────────────────────────────────────────────────────────────
+  // ── Cache stats ──────────────────────────────────────────────────────────
   Widget _buildCacheStatsTile(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.storage, color: AppTheme.goldColor),
-      title: const Text('Cache Statistics'),
-      subtitle: Text(
-          'Surahs: ${_cacheStats['surahs']}, Recitations: ${_cacheStats['recitations']}'),
-      trailing: const Icon(Icons.chevron_right),
+    return _SettingsTile(
+      icon: Icons.bar_chart_rounded,
+      title: 'Cache Statistics',
+      subtitle:
+          'Surahs: ${_cacheStats['surahs']}  ·  Recitations: ${_cacheStats['recitations']}',
+      trailing: const Icon(Icons.chevron_right_rounded,
+          color: AppTheme.greyText),
       onTap: () => _showCacheStatsDialog(context, _cacheStats),
     );
   }
 
   Widget _buildClearCacheTile(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.delete_outline, color: Colors.red),
-      title: const Text('Clear Cache'),
-      subtitle: const Text('Free up storage space'),
+    return _SettingsTile(
+      icon: Icons.delete_outline_rounded,
+      iconColor: Colors.red.shade400,
+      title: 'Clear Cache',
+      subtitle: 'Free up storage space',
       onTap: () async {
         final confirm = await _showConfirmDialog(
           context,
           'Clear Cache?',
-          'This will delete all cached data. The app will re-download data when needed.',
+          'This will delete all cached data. The app will re-download when needed.',
         );
         if (confirm == true) {
           await sl<CacheService>().clearAll();
@@ -155,18 +172,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ── Display ────────────────────────────────────────────────────────────────
+  // ── Display ──────────────────────────────────────────────────────────────
   Widget _buildMushafTile(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
-        return ListTile(
-          leading: const Icon(Icons.menu_book, color: AppTheme.goldColor),
-          title: const Text('Qiraat Style'),
-          subtitle: Text(_getMushafLabel(settings.mushafType)),
-          trailing: const Icon(Icons.chevron_right),
+        return _SettingsTile(
+          icon: Icons.menu_book_rounded,
+          title: 'Qiraat Style',
+          subtitle: _getMushafLabel(settings.mushafType),
+          trailing: const Icon(Icons.chevron_right_rounded,
+              color: AppTheme.greyText),
           onTap: () {
-            showDialog(
+            showModalBottomSheet(
               context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
               builder: (_) => MushafSelectionDialog(
                 currentType: settings.mushafType,
                 onTypeSelected: (type) {
@@ -175,7 +195,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SnackBar(
                       content: Text(
                           'Qiraat style changed to ${_getMushafLabel(type)}'),
-                      duration: const Duration(seconds: 2),
                     ),
                   );
                 },
@@ -205,41 +224,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildNightModeTile(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
-        return SwitchListTile(
-          secondary: const Icon(Icons.dark_mode, color: AppTheme.goldColor),
-          title: const Text('Night Mode'),
-          subtitle: const Text('Dark theme for comfortable reading'),
-          value: settings.nightMode,
-          onChanged: (_) {
-            settings.toggleNightMode();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(settings.nightMode
-                    ? 'Night mode disabled'
-                    : 'Night mode enabled'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
+        return _SettingsTile(
+          icon: settings.nightMode
+              ? Icons.wb_sunny_rounded
+              : Icons.nightlight_round_rounded,
+          title: 'Night Mode',
+          subtitle: 'Dark theme for comfortable reading',
+          trailing: Switch(
+            value: settings.nightMode,
+            activeColor: AppTheme.goldColor,
+            onChanged: (_) {
+              settings.toggleNightMode();
+            },
+          ),
+          onTap: () => settings.toggleNightMode(),
         );
       },
     );
   }
 
-  // ── About ──────────────────────────────────────────────────────────────────
+  // ── About ────────────────────────────────────────────────────────────────
   Widget _buildAboutTile(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.info_outline, color: AppTheme.goldColor),
-      title: const Text('About'),
-      subtitle: const Text('Version 1.0.0'),
-      trailing: const Icon(Icons.chevron_right),
+    return _SettingsTile(
+      icon: Icons.info_outline_rounded,
+      title: 'About Al-Quran',
+      subtitle: 'Version 1.0.0',
+      trailing: const Icon(Icons.chevron_right_rounded,
+          color: AppTheme.greyText),
       onTap: () {
         showAboutDialog(
           context: context,
           applicationName: 'Al-Quran',
           applicationVersion: '1.0.0',
           applicationIcon:
-              const Icon(Icons.book, size: 48, color: AppTheme.goldColor),
+              const Icon(Icons.book_rounded, size: 48, color: AppTheme.goldColor),
           children: const [
             Text('A beautiful Quran app with offline-first architecture.'),
             SizedBox(height: 16),
@@ -254,23 +272,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ── Dialogs ────────────────────────────────────────────────────────────────
+  // ── Dialogs ──────────────────────────────────────────────────────────────
   void _showCacheStatsDialog(BuildContext context, Map<String, int> stats) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Cache Statistics'),
+        backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Cache Statistics', style: AppTheme.titleStyle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatRow('Surahs cached', '${stats['surahs']}'),
-            const SizedBox(height: 8),
-            _buildStatRow('Recitations cached', '${stats['recitations']}'),
+            _buildStatRow(context, 'Surahs cached', '${stats['surahs']}'),
+            const SizedBox(height: 10),
+            _buildStatRow(
+                context, 'Recitations cached', '${stats['recitations']}'),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Cached data loads significantly faster than fetching from the network.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: AppTheme.subtitleStyle.copyWith(fontSize: 12),
             ),
           ],
         ),
@@ -284,16 +306,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildStatRow(String label, String value) {
+  Widget _buildStatRow(BuildContext context, String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.goldColor,
+        Text(label,
+            style: AppTheme.bodyStyle.copyWith(
+                color: isDark ? AppTheme.darkText : AppTheme.blackText)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppTheme.goldColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value,
+            style: AppTheme.titleStyle.copyWith(
+                color: AppTheme.goldColor, fontSize: 14),
           ),
         ),
       ],
@@ -302,11 +332,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<bool?> _showConfirmDialog(
       BuildContext context, String title, String message) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
+        backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: AppTheme.titleStyle),
+        content: Text(message, style: AppTheme.bodyStyle),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -318,6 +351,168 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('Clear'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Section card ───────────────────────────────────────────────────────────
+class _SectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool isDark;
+  final List<Widget> children;
+
+  const _SectionCard({
+    required this.icon,
+    required this.title,
+    required this.isDark,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.goldColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 14, color: AppTheme.goldColor),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: AppTheme.labelStyle.copyWith(
+                  color: AppTheme.goldColor,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Card container
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? AppTheme.goldColor.withOpacity(0.1)
+                  : AppTheme.goldColor.withOpacity(0.15),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.15 : 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Settings tile ──────────────────────────────────────────────────────────
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveIconColor = iconColor ?? AppTheme.goldColor;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: effectiveIconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: effectiveIconColor, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.bodyStyle.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppTheme.darkText : AppTheme.blackText,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppTheme.subtitleStyle.copyWith(
+                      color: isDark ? AppTheme.darkSubtitle : AppTheme.greyText,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tile divider ───────────────────────────────────────────────────────────
+class _TileDivider extends StatelessWidget {
+  const _TileDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(left: 68),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: isDark
+            ? Colors.white.withOpacity(0.06)
+            : Colors.black.withOpacity(0.06),
       ),
     );
   }
