@@ -57,7 +57,10 @@ class MushafPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 25.0),
                       child: SvgPicture.asset(
                         imagePath,
-                        fit: BoxFit.fill, // Étire l'image pour remplir l'écran (sans marge, sans débordement)
+                        // Ne pas étirer les pages 1 et 2 qui ont des bordures décoratives spéciales
+                        fit: (pageNumber == 1 || pageNumber == 2) 
+                             ? BoxFit.contain 
+                             : BoxFit.fill, 
                         placeholderBuilder: (_) => const SizedBox(
                           width: 40,
                           height: 40,
