@@ -38,7 +38,6 @@ dependencies:
   http: ^1.2.0
   just_audio: ^0.9.42
   provider: ^6.1.5+1
-  google_fonts: ^5.1.0
   shared_preferences: ^2.2.3
   flutter_svg: ^2.0.10+1
   cached_network_image: ^3.3.1
