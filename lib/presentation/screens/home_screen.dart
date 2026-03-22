@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../providers/quran_provider.dart';
 import '../widgets/surah_card.dart';
 import '../widgets/verse_search_delegate.dart';
-import 'surah_detail_screen.dart';
+import 'mushaf_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    SurahDetailScreen(surah: surah),
+                                    MushafScreen(startPage: surah.pages.isNotEmpty ? surah.pages[0] : 1),
                               ),
                             ),
                           );
@@ -342,8 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => SurahDetailScreen(
-                                surah: surah,
+                              builder: (_) => MushafScreen(
                                 startPage: pageNum,
                               ),
                             ),

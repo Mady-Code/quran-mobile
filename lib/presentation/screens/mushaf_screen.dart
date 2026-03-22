@@ -8,7 +8,9 @@ import '../widgets/verse_search_delegate.dart';
 import '../../features/quran/domain/entities/verse.dart';
 
 class MushafScreen extends StatefulWidget {
-  const MushafScreen({super.key});
+  final int? startPage;
+
+  const MushafScreen({super.key, this.startPage});
 
   @override
   State<MushafScreen> createState() => _MushafScreenState();
@@ -16,7 +18,7 @@ class MushafScreen extends StatefulWidget {
 
 class _MushafScreenState extends State<MushafScreen> {
   late PageController _pageController;
-  int _currentPage = 1;
+  late int _currentPage;
   bool _showOverlay = false;
 
   static const int _totalPages = 604;
@@ -25,6 +27,7 @@ class _MushafScreenState extends State<MushafScreen> {
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    _currentPage = widget.startPage ?? 1;
     _pageController = PageController(initialPage: _currentPage - 1);
   }
 
@@ -71,160 +74,236 @@ class _MushafScreenState extends State<MushafScreen> {
               onTap: _toggleOverlay,
             ),
           ),
-
-          // ── Top overlay ──────────────────────────────────────────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
+          // ── Bottom overlay (barre flottante) ─────────────────────────────
+          AnimatedSlide(
+            offset: _showOverlay ? Offset.zero : const Offset(0, 1.5),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
             child: AnimatedOpacity(
               opacity: _showOverlay ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 250),
               child: IgnorePointer(
                 ignoring: !_showOverlay,
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(8, 44, 8, 20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.75),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Close full-screen overlay hint
-                      IconButton(
-                        icon:
-                            const Icon(Icons.close, color: AppTheme.creamColor),
-                        tooltip: 'Hide controls',
-                        onPressed: _toggleOverlay,
-                      ),
-                      if (surah != null)
-                        Text(
-                          surah.nameArabic,
-                          style: AppTheme.arabicText.copyWith(
-                            fontSize: 22,
-                            color: AppTheme.creamColor,
-                            height: 1.2,
-                          ),
-                        ),
-                      IconButton(
-                        icon:
-                            const Icon(Icons.search, color: AppTheme.creamColor),
-                        tooltip: 'Search verses',
-                        onPressed: _openSearch,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ── Bottom overlay ───────────────────────────────────────────────
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: AnimatedOpacity(
-              opacity: _showOverlay ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: IgnorePointer(
-                ignoring: !_showOverlay,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.8),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Consumer<QuranProvider>(
-                    builder: (context, p, _) {
-                      final isBookmarked = p.isPageBookmarked(_currentPage);
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              // Bookmark
-                              Tooltip(
-                                message: isBookmarked
-                                    ? 'Remove bookmark'
-                                    : 'Bookmark page',
-                                child: IconButton(
-                                  icon: Icon(
-                                    isBookmarked
-                                        ? Icons.bookmark
-                                        : Icons.bookmark_border,
-                                    color: isBookmarked
-                                        ? AppTheme.goldColor
-                                        : AppTheme.creamColor,
-                                  ),
-                                  onPressed: () =>
-                                      p.toggleBookmark(_currentPage),
-                                ),
-                              ),
-                              // Audio
-                              Tooltip(
-                                message: p.isPlaying
-                                    ? 'Stop audio'
-                                    : 'Play this page',
-                                child: IconButton(
-                                  icon: Icon(
-                                    p.isPlaying
-                                        ? Icons.stop_circle_outlined
-                                        : Icons.headphones,
-                                    color: AppTheme.creamColor,
-                                  ),
-                                  onPressed: p.isPlaying
-                                      ? p.stopAudio
-                                      : () => p.playPage(_currentPage),
-                                ),
-                              ),
-                              // Night mode
-                              Tooltip(
-                                message: p.isNightMode
-                                    ? 'Light mode'
-                                    : 'Night mode',
-                                child: IconButton(
-                                  icon: Icon(
-                                    p.isNightMode
-                                        ? Icons.wb_sunny
-                                        : Icons.nightlight_round,
-                                    color: AppTheme.creamColor,
-                                  ),
-                                  onPressed: p.toggleNightMode,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Page $_currentPage / $_totalPages',
-                            style: AppTheme.subtitleStyle.copyWith(
-                                color: AppTheme.creamColor.withOpacity(0.8)),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SafeArea(
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                      padding: const EdgeInsets.fromLTRB(8, 14, 8, 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF1E1E1E)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(isDark ? 0.4 : 0.12),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
                           ),
                         ],
-                      );
-                    },
+                      ),
+                      child: Consumer<QuranProvider>(
+                        builder: (context, p, _) {
+                          final isBookmarked = p.isPageBookmarked(_currentPage);
+                          final iconColor = isDark ? Colors.white70 : Colors.black54;
+                          final surahName = surah?.nameArabic ?? '';
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // ── Info Sourate + Page ────────────────
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Juz indicator
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.goldColor.withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'Juz ${((_currentPage - 1) ~/ 20) + 1}',
+                                        style: AppTheme.labelStyle.copyWith(
+                                          color: AppTheme.goldColor,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                    // Surah name
+                                    if (surahName.isNotEmpty)
+                                      Flexible(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          child: Text(
+                                            surahName,
+                                            style: AppTheme.arabicText.copyWith(
+                                              fontSize: 18,
+                                              color: isDark ? AppTheme.goldColor : AppTheme.darkGreen,
+                                              fontWeight: FontWeight.bold,
+                                              height: 1.4,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    // Page counter
+                                    Text(
+                                      '$_currentPage / $_totalPages',
+                                      style: AppTheme.labelStyle.copyWith(
+                                        color: isDark ? Colors.white54 : Colors.black45,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              // ── Slider de navigation ───────────────
+                              SliderTheme(
+                                data: SliderThemeData(
+                                  activeTrackColor: AppTheme.goldColor,
+                                  inactiveTrackColor: isDark
+                                      ? Colors.white12
+                                      : Colors.black12,
+                                  thumbColor: AppTheme.goldColor,
+                                  overlayColor: AppTheme.goldColor.withOpacity(0.15),
+                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                  trackHeight: 3,
+                                ),
+                                child: Slider(
+                                  value: _currentPage.toDouble(),
+                                  min: 1,
+                                  max: _totalPages.toDouble(),
+                                  onChanged: (value) {
+                                    final page = value.round();
+                                    setState(() => _currentPage = page);
+                                    _pageController.jumpToPage(page - 1);
+                                  },
+                                ),
+                              ),
+
+                              const SizedBox(height: 2),
+
+                              // ── Boutons de contrôle ────────────────
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  // Retour
+                                  _OverlayButton(
+                                    icon: Icons.arrow_back_ios_new_rounded,
+                                    label: 'Retour',
+                                    color: iconColor,
+                                    onTap: () => Navigator.of(context).pop(),
+                                  ),
+                                  // Recherche
+                                  _OverlayButton(
+                                    icon: Icons.search_rounded,
+                                    label: 'Chercher',
+                                    color: iconColor,
+                                    onTap: _openSearch,
+                                  ),
+                                  // Lecture audio (bouton principal)
+                                  _OverlayButton(
+                                    icon: p.isPlaying
+                                        ? Icons.stop_circle_rounded
+                                        : Icons.play_circle_fill_rounded,
+                                    label: p.isPlaying ? 'Arrêter' : 'Écouter',
+                                    color: p.isPlaying
+                                        ? Colors.redAccent
+                                        : AppTheme.goldColor,
+                                    size: 32,
+                                    onTap: p.isPlaying
+                                        ? p.stopAudio
+                                        : () => p.playPage(_currentPage),
+                                  ),
+                                  // Favoris
+                                  _OverlayButton(
+                                    icon: isBookmarked
+                                        ? Icons.bookmark_rounded
+                                        : Icons.bookmark_border_rounded,
+                                    label: 'Favoris',
+                                    color: isBookmarked
+                                        ? AppTheme.goldColor
+                                        : iconColor,
+                                    onTap: () =>
+                                        p.toggleBookmark(_currentPage),
+                                  ),
+                                  // Mode nuit
+                                  _OverlayButton(
+                                    icon: p.isNightMode
+                                        ? Icons.wb_sunny_rounded
+                                        : Icons.nightlight_round,
+                                    label: p.isNightMode ? 'Clair' : 'Sombre',
+                                    color: iconColor,
+                                    onTap: p.toggleNightMode,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Petit bouton icône + label pour l'overlay du Mushaf.
+class _OverlayButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final double size;
+  final VoidCallback onTap;
+
+  const _OverlayButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.size = 24,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 56,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: size),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

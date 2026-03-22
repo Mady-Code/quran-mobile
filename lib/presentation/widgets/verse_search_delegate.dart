@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../features/quran/domain/entities/surah.dart';
 import '../../features/quran/domain/entities/verse.dart';
 import '../providers/quran_provider.dart';

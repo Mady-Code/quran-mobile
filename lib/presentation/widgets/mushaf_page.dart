@@ -35,37 +35,42 @@ class MushafPage extends StatelessWidget {
           color: isNightMode
               ? const Color(0xFF202020)
               : const Color(0xFFFAF8F3),
-          child: InteractiveViewer(
-            minScale: 1.0,
-            maxScale: 4.0,
-            child: SizedBox.expand(
-              child: Builder(
-                builder: (context) => GestureDetector(
-                  onTap: onTap,
-                  onLongPressStart: (details) {
-                    final RenderBox box =
-                        context.findRenderObject() as RenderBox;
-                    _handleLongPress(
-                        context, details, box.size.height, provider);
-                  },
-                  child: ColorFiltered(
-                    colorFilter: isNightMode
-                        ? nightFilter
-                        : const ColorFilter.mode(
-                            Colors.transparent, BlendMode.dst),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 25.0),
-                      child: SvgPicture.asset(
-                        imagePath,
-                        // Ne pas étirer les pages 1 et 2 qui ont des bordures décoratives spéciales
-                        fit: (pageNumber == 1 || pageNumber == 2) 
-                             ? BoxFit.contain 
-                             : BoxFit.fill, 
-                        placeholderBuilder: (_) => const SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Center(
-                            child: CircularProgressIndicator(),
+          child: Stack(
+            children: [
+              // ── Image SVG du Mushaf ──────────────────────────────────
+              InteractiveViewer(
+                minScale: 1.0,
+                maxScale: 4.0,
+                child: SizedBox.expand(
+                  child: Builder(
+                    builder: (context) => GestureDetector(
+                      onTap: onTap,
+                      onLongPressStart: (details) {
+                        final RenderBox box =
+                            context.findRenderObject() as RenderBox;
+                        _handleLongPress(
+                            context, details, box.size.height, provider);
+                      },
+                      child: ColorFiltered(
+                        colorFilter: isNightMode
+                            ? nightFilter
+                            : const ColorFilter.mode(
+                                Colors.transparent, BlendMode.dst),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 25.0),
+                          child: SvgPicture.asset(
+                            imagePath,
+                            // Ne pas étirer les pages 1 et 2 qui ont des bordures décoratives spéciales
+                            fit: (pageNumber == 1 || pageNumber == 2) 
+                                 ? BoxFit.contain 
+                                 : BoxFit.fill, 
+                            placeholderBuilder: (_) => const SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -73,7 +78,43 @@ class MushafPage extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+
+              // ── Nom de la Sourate (haut droite) ─────────────────────
+              Positioned(
+                top: 8,
+                right: 14,
+                child: Builder(
+                  builder: (_) {
+                    final surah = provider.getSurahForPage(pageNumber);
+                    return Text(
+                      surah?.nameArabic ?? '',
+                      style: AppTheme.arabicText.copyWith(
+                        fontSize: 18,
+                        color: isNightMode ? AppTheme.goldColor : AppTheme.darkGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // ── Numéro de la page (bas centré) ──────────────────────
+              Positioned(
+                bottom: 8,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    '$pageNumber',
+                    style: AppTheme.subtitleStyle.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isNightMode ? AppTheme.goldColor : AppTheme.darkGreen,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },

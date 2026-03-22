@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/quran/domain/entities/surah.dart';
 
@@ -132,7 +131,7 @@ class _NumberBadge extends StatelessWidget {
         ),
         Text(
           '$number',
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: number > 99 ? 10 : 12,
             fontWeight: FontWeight.w700,
             color: AppTheme.goldColor,

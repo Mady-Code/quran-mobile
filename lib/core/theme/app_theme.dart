@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ── Brand palette ────────────────────────────────────────────────────────
@@ -28,36 +27,36 @@ class AppTheme {
     height: 2.0,
   );
 
-  static TextStyle get displayStyle => GoogleFonts.poppins(
+  static TextStyle get displayStyle => const TextStyle(
     fontSize: 26,
     fontWeight: FontWeight.bold,
     color: blackText,
   );
 
-  static TextStyle get headingStyle => GoogleFonts.poppins(
+  static TextStyle get headingStyle => const TextStyle(
     fontSize: 22,
     fontWeight: FontWeight.bold,
     color: blackText,
   );
 
-  static TextStyle get titleStyle => GoogleFonts.poppins(
+  static TextStyle get titleStyle => const TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: blackText,
   );
 
-  static TextStyle get bodyStyle => GoogleFonts.poppins(
+  static TextStyle get bodyStyle => const TextStyle(
     fontSize: 14,
     color: blackText,
     height: 1.5,
   );
 
-  static TextStyle get subtitleStyle => GoogleFonts.poppins(
+  static TextStyle get subtitleStyle => const TextStyle(
     fontSize: 12,
     color: greyText,
   );
 
-  static TextStyle get labelStyle => GoogleFonts.poppins(
+  static TextStyle get labelStyle => const TextStyle(
     fontSize: 11,
     fontWeight: FontWeight.w500,
     color: greyText,
@@ -78,7 +77,7 @@ class AppTheme {
         surface: Colors.white,
         onPrimary: Colors.white,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+      textTheme: ThemeData.light().textTheme.copyWith(
         displayLarge: headingStyle,
         titleLarge: titleStyle,
         bodyLarge: bodyStyle,
@@ -90,7 +89,7 @@ class AppTheme {
         centerTitle: true,
         scrolledUnderElevation: 0,
         iconTheme: const IconThemeData(color: blackText),
-        titleTextStyle: GoogleFonts.poppins(
+        titleTextStyle: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: blackText,
@@ -108,10 +107,10 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.poppins(
+            return const TextStyle(
               fontSize: 11, fontWeight: FontWeight.w600, color: goldColor);
           }
-          return GoogleFonts.poppins(
+          return const TextStyle(
             fontSize: 11, fontWeight: FontWeight.w500, color: greyText);
         }),
         height: 64,
@@ -157,19 +156,19 @@ class AppTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: goldColor,
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentTextStyle: GoogleFonts.poppins(fontSize: 13),
+        contentTextStyle: const TextStyle(fontSize: 13),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.transparent,
@@ -193,7 +192,7 @@ class AppTheme {
         onPrimary: Colors.black,
         onSurface: darkText,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
+      textTheme: ThemeData.dark().textTheme.copyWith(
         displayLarge: headingStyle.copyWith(color: darkText),
         titleLarge: titleStyle.copyWith(color: darkText),
         bodyLarge: bodyStyle.copyWith(color: darkText),
@@ -205,7 +204,7 @@ class AppTheme {
         centerTitle: true,
         scrolledUnderElevation: 0,
         iconTheme: const IconThemeData(color: darkText),
-        titleTextStyle: GoogleFonts.poppins(
+        titleTextStyle: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: darkText,
@@ -223,10 +222,10 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.poppins(
+            return const TextStyle(
               fontSize: 11, fontWeight: FontWeight.w600, color: goldColor);
           }
-          return GoogleFonts.poppins(
+          return const TextStyle(
             fontSize: 11, fontWeight: FontWeight.w500, color: darkSubtitle);
         }),
         height: 64,
@@ -270,20 +269,20 @@ class AppTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: goldColor,
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: darkElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentTextStyle: GoogleFonts.poppins(fontSize: 13, color: darkText),
+        contentTextStyle: const TextStyle(fontSize: 13, color: darkText),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.transparent,
