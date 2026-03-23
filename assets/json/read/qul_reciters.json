@@ -40,12 +40,12 @@
     "audio_assets": "json/read/qul/surah-recitation-ahmad-alnufais"
   },
   {
-    "id": "119",
+    "id": "335",
     "name": "Saad al Ghamdi",
     "style": "",
     "format": "",
     "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-saad-al-ghamdi"
+    "audio_assets": "json/read/qul/surah-recitation-saad-ghamadi"
   },
   {
     "id": "562",

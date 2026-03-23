@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/quran/domain/entities/mushaf_type.dart';
+import '../../core/di/injection_container.dart';
+import '../../core/services/audio_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
   static const String _reciterIdKey = 'reciter_id';
@@ -53,6 +55,14 @@ class SettingsProvider extends ChangeNotifier {
     } else {
       await _prefs.remove(_reciterAudioAssetsKey);
     }
+    
+    // Switch the reciter seamlessly in the audio service
+    try {
+      await sl<AudioService>().switchReciter(id, name, audioAssets);
+    } catch (e) {
+      print('Error switching reciter stream: $e');
+    }
+    
     notifyListeners();
   }
   

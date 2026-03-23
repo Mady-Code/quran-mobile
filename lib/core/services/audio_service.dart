@@ -52,7 +52,7 @@ class AudioService {
 
       String jsonString;
       try {
-        jsonString = await rootBundle.loadString(audioJsonPath);
+        jsonString = await rootBundle.loadString(audioJsonPath, cache: false);
         final surahsAudioMappings = jsonDecode(jsonString) as Map<String, dynamic>;
         surahsAudioMappings.forEach((key, value) {
           final surahId = int.tryParse(key);
@@ -61,7 +61,7 @@ class AudioService {
           }
         });
       
-        final segmentsJsonString = await rootBundle.loadString(segmentsJsonPath);
+        final segmentsJsonString = await rootBundle.loadString(segmentsJsonPath, cache: false);
         _segmentsData = jsonDecode(segmentsJsonString);
       } catch (e) {
         // Afficher un petit message pour dire que le fichier n'a pas été trouvé
@@ -116,6 +116,42 @@ class AudioService {
   QulAyahRecitation? _currentQulRecitation;
   int _currentSegmentIndex = -1;
   
+  int get currentAyah {
+    if (_currentSurahId == null || _segmentsData == null) return 1;
+    final ms = _player.position.inMilliseconds;
+    
+    for (int ayah = 1; ayah <= 286; ayah++) {
+      final key = '$_currentSurahId:$ayah';
+      final ayahData = _segmentsData![key];
+      if (ayahData == null) break;
+      
+      if (ayahData is Map<String, dynamic>) {
+        final fromMs = ayahData['timestamp_from'] as int;
+        final toMs = ayahData['timestamp_to'] as int;
+        if (ms >= fromMs && ms <= toMs) return ayah;
+      }
+    }
+    return 1;
+  }
+
+  Future<void> switchReciter(String reciterId, String reciterName, String? audioAssets) async {
+    final bool wasPlaying = isPlaying;
+    final int? surahId = _currentSurahId;
+    final int ayah = currentAyah;
+    
+    await loadReciterData(reciterId, reciterName, audioAssets);
+    
+    if (surahId != null) {
+      _currentSurahId = null; // Force reload of audio source
+      
+      if (wasPlaying) {
+        await playSurahStream(surahId, ayah, reciterId);
+      } else {
+        await playSurahStream(surahId, ayah, reciterId, autoPlay: false);
+      }
+    }
+  }
+
   // Stream of current verse key based on audio position
   Stream<String?> get currentVerseStream => _player.positionStream.map((position) {
     if (_currentSurahId == null || _segmentsData == null) return null;
@@ -225,7 +261,7 @@ class AudioService {
     await _player.play();
   }
   
-  Future<void> playSurahStream(int surahId, int startAyah, String reciterId) async {
+  Future<void> playSurahStream(int surahId, int startAyah, String reciterId, {bool autoPlay = true}) async {
     try {
       Duration seekPos = Duration.zero;
       final key = '$surahId:$startAyah';
@@ -237,9 +273,9 @@ class AudioService {
          }
       }
 
-      if (_currentSurahId == surahId && _player.audioSource != null) {
+      if (_currentSurahId == surahId && _player.audioSource != null && _currentReciterIdForData == reciterId) {
           await _player.seek(seekPos);
-          await _player.play();
+          if (autoPlay) await _player.play();
           return;
       }
 
@@ -258,7 +294,7 @@ class AudioService {
       final audioSource = AudioSource.uri(Uri.parse(audioUrl));
       await _player.setAudioSource(audioSource);
       await _player.seek(seekPos);
-      await _player.play();
+      if (autoPlay) await _player.play();
       print('✅ Surah Stream started successfully');
     } catch (e) {
       print("❌ Error playing surah stream: $e");

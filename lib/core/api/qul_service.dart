@@ -10,7 +10,7 @@ class QulService {
   /// Get list of available reciters from JSON file
   Future<List<QulReciter>> getReciters() async {
     try {
-      final jsonString = await rootBundle.loadString('assets/json/read/qul_reciters.json');
+      final jsonString = await rootBundle.loadString('assets/json/read/qul_reciters.json', cache: false);
       final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList.map((item) {
         return QulReciter(
