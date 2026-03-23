@@ -32,6 +32,24 @@ class QuranProvider with ChangeNotifier {
     _audioService.currentVerseStream.listen((key) {
       if (_currentVerseKey != key) {
         _currentVerseKey = key;
+        
+        if (key != null) {
+          final parts = key.split(':');
+          if (parts.length == 2) {
+            final surahId = int.tryParse(parts[0]);
+            if (surahId != null) {
+              getVersesForSurah(surahId).then((verses) {
+                try {
+                  _currentVerse = verses.firstWhere((v) => v.verseKey == key);
+                  notifyListeners();
+                } catch (e) {
+                  // Ignores if verse is not found
+                }
+              });
+            }
+          }
+        }
+        
         notifyListeners();
       }
     });
@@ -140,8 +158,12 @@ class QuranProvider with ChangeNotifier {
   // ── Audio streams (forwarded from AudioService) ───────────────────────────
   Stream<Duration> get positionStream => _audioService.positionStream;
   Stream<Duration?> get durationStream => _audioService.durationStream;
+  Stream<double> get speedStream => _audioService.speedStream;
 
   // ── Audio control methods ─────────────────────────────────────────────────
+  Future<void> setSpeed(double speed) async {
+    await _audioService.setSpeed(speed);
+  }
   Future<void> playAyah(Verse verse) async {
     try {
       _currentVerse = verse;
@@ -308,7 +330,14 @@ class QuranProvider with ChangeNotifier {
         final firstLine = sortedLines.first;
         final verses = lines[firstLine];
         if (verses != null && verses.isNotEmpty) {
-          await playAyah(verses.first);
+          // Fetch the REAL verse with text since the one in _pageLines is a placeholder
+          final realVerses = await getVersesForSurah(verses.first.surahId);
+          try {
+            final realVerse = realVerses.firstWhere((v) => v.verseKey == verses.first.verseKey);
+            await playAyah(realVerse);
+          } catch(e) {
+            await playAyah(verses.first);
+          }
           return;
         }
       }

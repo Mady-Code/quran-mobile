@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../providers/quran_provider.dart';
+import '../../core/services/audio_service.dart';
+import '../../core/di/injection_container.dart';
+import '../widgets/reciter_selection_dialog.dart';
+import '../providers/settings_provider.dart';
 
 class AudioScreen extends StatelessWidget {
   const AudioScreen({super.key});
@@ -29,17 +33,37 @@ class AudioScreen extends StatelessWidget {
           style: AppTheme.headingStyle.copyWith(color: textColor, fontSize: 18),
         ),
         iconTheme: IconThemeData(color: textColor),
+        actions: [
+          Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              return Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.text_decrease_rounded, size: 20),
+                    onPressed: settings.arabicFontSize > 20
+                        ? () => settings.setArabicFontSize(settings.arabicFontSize - 2)
+                        : null,
+                    tooltip: 'Diminuer la taille',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.text_increase_rounded, size: 24),
+                    onPressed: settings.arabicFontSize < 60
+                        ? () => settings.setArabicFontSize(settings.arabicFontSize + 2)
+                        : null,
+                    tooltip: 'Augmenter la taille',
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              );
+            },
+          ),
+        ],
       ),
       drawer: _buildSurahDrawer(context, isDark),
       body: SafeArea(
         child: Consumer<QuranProvider>(
           builder: (context, provider, child) {
-            return Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: _buildPlayerView(context, provider, isDark),
-              ),
-            );
+            return _buildPlayerView(context, provider, isDark);
           },
         ),
       ),
@@ -144,69 +168,71 @@ class AudioScreen extends StatelessWidget {
     final subtitleColor = isDark ? AppTheme.darkSubtitle : AppTheme.greyText;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Album Art
-          _AlbumArt(isPlaying: provider.isPlaying, size: 280),
-          const SizedBox(height: 48),
-          
-          // Title
+          // Header: Surah Title
           Text(
             provider.currentSurahName ?? 'Ouvrez le menu pour choisir',
             style: AppTheme.headingStyle.copyWith(
-              fontSize: provider.currentSurahName == null ? 20 : 28,
+              fontSize: provider.currentSurahName == null ? 20 : 32,
               color: textColor,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           
-          // Reciter Name
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.mic_rounded, size: 18, color: AppTheme.goldColor),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  provider.currentReciterName,
-                  style: AppTheme.subtitleStyle.copyWith(
-                    color: subtitleColor, 
-                    fontSize: 16,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          // Reciter Name (Tappable)
+          GestureDetector(
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (context) => ReciterSelectionDialog(
+                  currentReciterId: provider.currentReciterId,
+                  onReciterSelected: (id, name, audioAssets) async {
+                    await sl<SettingsProvider>().setReciter(id, name, audioAssets);
+                    await sl<AudioService>().switchReciter(id, name, audioAssets);
+                  },
                 ),
-              ),
-            ],
+              );
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.mic_rounded, size: 18, color: AppTheme.goldColor),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    provider.currentReciterName,
+                    style: AppTheme.subtitleStyle.copyWith(
+                      color: subtitleColor, 
+                      fontSize: 16,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: subtitleColor),
+              ],
+            ),
           ),
           
-          if (provider.currentVerseKey != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.goldColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.goldColor.withOpacity(0.3)),
-              ),
-              child: Text(
-                'Verset ${provider.currentVerseKey}',
-                style: TextStyle(
-                  color: AppTheme.goldColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
+          const SizedBox(height: 32),
           
-          const SizedBox(height: 48),
+          // Premium Verse Display fills remaining space
+          Expanded(
+            child: (sl<AudioService>().hasSegments && provider.currentVerseKey != null) 
+              ? _AudioVerseDisplay(provider: provider, isDark: isDark)
+              : _buildFallbackDisplay(provider, isDark),
+          ),
+          
+          const SizedBox(height: 32),
           
           // Progress bar
           _ProgressBar(
@@ -215,116 +241,60 @@ class AudioScreen extends StatelessWidget {
             formatDuration: _formatDuration,
           ),
           
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           
           // Controls
           _Controls(provider: provider, isDark: isDark),
-          const SizedBox(height: 48),
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
-}
 
-class _AlbumArt extends StatefulWidget {
-  final bool isPlaying;
-  final double size;
-  
-  const _AlbumArt({required this.isPlaying, this.size = 280});
-
-  @override
-  State<_AlbumArt> createState() => _AlbumArtState();
-}
-
-class _AlbumArtState extends State<_AlbumArt>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _rotateController;
-
-  @override
-  void initState() {
-    super.initState();
-    _rotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    );
-    if (widget.isPlaying) _rotateController.repeat();
-  }
-
-  @override
-  void didUpdateWidget(_AlbumArt old) {
-    super.didUpdateWidget(old);
-    if (widget.isPlaying && !_rotateController.isAnimating) {
-      _rotateController.repeat();
-    } else if (!widget.isPlaying && _rotateController.isAnimating) {
-      _rotateController.stop();
-    }
-  }
-
-  @override
-  void dispose() {
-    _rotateController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return RotationTransition(
-      turns: _rotateController,
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const RadialGradient(
-            center: Alignment(-0.3, -0.3),
-            colors: [Color(0xFF3D8A57), AppTheme.darkGreen, Color(0xFF0F2D1C)],
+  Widget _buildFallbackDisplay(QuranProvider provider, bool isDark) {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: AppTheme.goldColor.withOpacity(0.15), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.goldColor.withOpacity(0.05),
+            blurRadius: 30,
+            spreadRadius: 5,
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.mosque_rounded, size: 90, color: AppTheme.goldColor.withOpacity(0.4)),
+          const SizedBox(height: 32),
+          Text(
+            provider.currentSurahName ?? '',
+            style: AppTheme.arabicText.copyWith(
+              fontSize: 38,
+              color: AppTheme.goldColor.withOpacity(0.9),
+              shadows: [
+                Shadow(
+                  color: AppTheme.goldColor.withOpacity(0.3),
+                  blurRadius: 10,
+                )
+              ]
+            ),
           ),
-          border: Border.all(color: AppTheme.goldColor.withOpacity(0.6), width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.goldColor.withOpacity(0.25),
-              blurRadius: 30,
-              spreadRadius: 4,
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Decorative rings
-            Container(
-              width: widget.size * 0.75,
-              height: widget.size * 0.75,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.goldColor.withOpacity(0.2), width: 1.5),
+          if (provider.currentSurahName != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Lecture en cours...',
+              style: AppTheme.subtitleStyle.copyWith(
+                color: isDark ? Colors.white54 : Colors.black54,
+                fontStyle: FontStyle.italic,
               ),
             ),
-            Container(
-              width: widget.size * 0.5,
-              height: widget.size * 0.5,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.goldColor.withOpacity(0.15), width: 1.5),
-              ),
-            ),
-            // Center icon
-            Container(
-              width: widget.size * 0.3,
-              height: widget.size * 0.3,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.4),
-              ),
-              child: Icon(Icons.mosque_rounded, size: widget.size * 0.15, color: AppTheme.goldColor),
-            ),
-          ],
-        ),
+          ]
+        ],
       ),
     );
   }
@@ -421,21 +391,59 @@ class _Controls extends StatelessWidget {
     final iconColor = isDark ? AppTheme.darkText : AppTheme.blackText;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
+        // Speed Control
+        StreamBuilder<double>(
+          stream: provider.speedStream,
+          builder: (context, snapshot) {
+            final speed = snapshot.data ?? 1.0;
+            return PopupMenuButton<double>(
+              initialValue: speed,
+              onSelected: provider.setSpeed,
+              color: isDark ? AppTheme.darkSurface : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              itemBuilder: (context) => [
+                0.5, 0.75, 1.0, 1.25, 1.5, 2.0
+              ].map((s) => PopupMenuItem(
+                value: s,
+                child: Text('${s}x', style: AppTheme.headingStyle.copyWith(
+                  color: s == speed ? AppTheme.goldColor : (isDark ? Colors.white : Colors.black),
+                  fontSize: 14,
+                )),
+              )).toList(),
+              offset: const Offset(0, -220),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.goldColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppTheme.goldColor.withOpacity(0.2)),
+                ),
+                child: Text(
+                  '${speed}x', 
+                  style: AppTheme.headingStyle.copyWith(color: AppTheme.goldColor, fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+              ),
+            );
+          }
+        ),
+        
+        // Previous
         _ControlButton(
           icon: Icons.skip_previous_rounded,
-          size: 36,
+          size: 32,
           color: iconColor,
           onTap: provider.skipToPreviousVerse,
           tooltip: 'Verset précédent',
         ),
-        const SizedBox(width: 32),
+        
+        // Play/Pause
         GestureDetector(
           onTap: provider.isPlaying ? provider.pauseAudio : provider.resumeAudio,
           child: Container(
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppTheme.goldColor,
@@ -450,18 +458,22 @@ class _Controls extends StatelessWidget {
             child: Icon(
               provider.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: Colors.white,
-              size: 42,
+              size: 38,
             ),
           ),
         ),
-        const SizedBox(width: 32),
+        
+        // Next
         _ControlButton(
           icon: Icons.skip_next_rounded,
-          size: 36,
+          size: 32,
           color: iconColor,
           onTap: provider.skipToNextVerse,
           tooltip: 'Verset suivant',
         ),
+
+        // Placeholder to balance the speed button
+        const SizedBox(width: 50),
       ],
     );
   }
@@ -490,9 +502,127 @@ class _ControlButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(40),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
           child: Icon(icon, size: size, color: color),
         ),
+      ),
+    );
+  }
+}
+
+class _AudioVerseDisplay extends StatelessWidget {
+  final QuranProvider provider;
+  final bool isDark;
+
+  const _AudioVerseDisplay({required this.provider, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final verse = provider.currentVerse;
+    if (verse == null || verse.textUthmani.trim().isEmpty) return const SizedBox.shrink();
+    
+    final words = verse.textUthmani.trim().split(RegExp(r'\s+'));
+    final segments = sl<AudioService>().getSegmentsForVerse(verse.verseKey ?? '') ?? [];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark 
+            ? [const Color(0xFF1E1E1E), const Color(0xFF121212)]
+            : [Colors.white, const Color(0xFFFDFBF7)],
+        ),
+        borderRadius: BorderRadius.circular(36),
+        border: Border.all(
+          color: AppTheme.goldColor.withOpacity(isDark ? 0.2 : 0.4), 
+          width: 1.5
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.goldColor.withOpacity(0.08),
+            blurRadius: 30,
+            spreadRadius: 5,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          // Small verse indicator at the top
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.goldColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Verset ${verse.verseKey}',
+              style: AppTheme.headingStyle.copyWith(
+                color: AppTheme.goldColor,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Scrollable Text
+          Expanded(
+            child: StreamBuilder<Duration>(
+              stream: provider.positionStream,
+              builder: (context, snapshot) {
+                final position = snapshot.data?.inMilliseconds ?? 0;
+                
+                int activeIndex = -1;
+                for (final segment in segments) {
+                  if (position >= segment.startMs && position <= segment.endMs) {
+                    activeIndex = segment.index;
+                    break;
+                  }
+                }
+
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      textDirection: TextDirection.rtl,
+                      spacing: 12,
+                      runSpacing: 20,
+                      children: List.generate(words.length, (index) {
+                        final isHighlighted = index == activeIndex;
+                        final baseSize = sl<SettingsProvider>().arabicFontSize;
+                        return AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 200),
+                          style: AppTheme.arabicText.copyWith(
+                            fontSize: isHighlighted ? baseSize + 10 : baseSize,
+                            height: 1.8,
+                            color: isHighlighted 
+                                ? AppTheme.goldColor 
+                                : (isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black87.withValues(alpha: 0.7)),
+                            shadows: isHighlighted ? [
+                              Shadow(
+                                color: AppTheme.goldColor.withValues(alpha: 0.5),
+                                blurRadius: 15,
+                              ),
+                              Shadow(
+                                color: AppTheme.goldColor.withValues(alpha: 0.2),
+                                blurRadius: 30,
+                              ),
+                            ] : null,
+                          ),
+                          child: Text(words[index]),
+                        );
+                      }),
+                    ),
+                  ),
+                );
+              }
+            ),
+          ),
+        ],
       ),
     );
   }

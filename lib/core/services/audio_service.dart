@@ -13,11 +13,11 @@ import '../cache/models/qul_recitation_model.dart';
 class AudioService {
   final AudioPlayer _player = AudioPlayer();
   
-  // Expose player state stream
   Stream<PlayerState> get playerStateStream => _player.playerStateStream;
   Stream<Duration> get positionStream => _player.positionStream;
   Stream<Duration?> get durationStream => _player.durationStream;
   Stream<int?> get currentIndexStream => _player.currentIndexStream;
+  Stream<double> get speedStream => _player.speedStream;
 
   // Playlist management
   ConcatenatingAudioSource? _playlist;
@@ -110,6 +110,10 @@ class AudioService {
     await _player.seekToPrevious();
   }
 
+  Future<void> setSpeed(double speed) async {
+    await _player.setSpeed(speed);
+  }
+
 
   // Current Recitation Data
   Recitation? _currentRecitation;
@@ -132,6 +136,18 @@ class AudioService {
       }
     }
     return 1;
+  }
+
+  bool get hasSegments => _segmentsData != null && _segmentsData!.isNotEmpty;
+
+  List<QulSegment>? getSegmentsForVerse(String key) {
+    if (_segmentsData == null) return null;
+    final ayahData = _segmentsData![key];
+    if (ayahData is Map<String, dynamic> && ayahData.containsKey('segments')) {
+      final segments = ayahData['segments'] as List;
+      return segments.map((e) => QulSegment.fromList(e as List)).toList();
+    }
+    return null;
   }
 
   Future<void> switchReciter(String reciterId, String reciterName, String? audioAssets) async {

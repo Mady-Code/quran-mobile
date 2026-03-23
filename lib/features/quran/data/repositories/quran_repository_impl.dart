@@ -43,9 +43,18 @@ class QuranRepositoryImpl implements QuranRepository {
 
   @override
   Future<List<Verse>> getVerses(int surahId, {int? page}) async {
-    // For now, return empty list - verses will be loaded from local data later
-    // or we can keep using API for verses if needed
-    return [];
+    // 1. Check cache first (verses cache missing in CacheService for now)
+    // For simplicity, we can load directly from LocalDataSource
+    try {
+      final verses = await _localDataSource.getVerses(surahId);
+      if (page != null) {
+        return verses.where((v) => v.pageNumber == page).toList();
+      }
+      return verses;
+    } catch (e) {
+      print('❌ Error loading verses for surah $surahId: $e');
+      return [];
+    }
   }
 
   @override
