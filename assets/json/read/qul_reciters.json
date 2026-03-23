@@ -8,14 +8,6 @@
     "audio_assets": "json/read/qul/surah-recitation-hady-toure"
   },
   {
-    "id": "414",
-    "name": "Mishari Rashid al-`Afasy Streaming",
-    "style": "",
-    "format": "",
-    "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-mishari-rashid-al-afasy"
-  },
-  {
     "id": "404",
     "name": "Abdullah Ali Jabir",
     "style": "",
@@ -38,6 +30,22 @@
     "format": "",
     "has_segments": true,
     "audio_assets": "json/read/qul/surah-recitation-abdullah-basfar"
+  },
+  {
+    "id": "461",
+    "name": "Ahmad Alnufais",
+    "style": "",
+    "format": "",
+    "has_segments": true,
+    "audio_assets": "json/read/qul/surah-recitation-ahmad-alnufais"
+  },
+  {
+    "id": "119",
+    "name": "Saad al Ghamdi",
+    "style": "",
+    "format": "",
+    "has_segments": true,
+    "audio_assets": "json/read/qul/surah-recitation-saad-al-ghamdi"
   },
   {
     "id": "562",
@@ -64,14 +72,6 @@
     "audio_assets": "json/read/qul/surah-recitation-yasser-al-dosari"
   },
   {
-    "id": "118",
-    "name": "Mishari Rashid al-`Afasy",
-    "style": "",
-    "format": "",
-    "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-mishari-rashid-al-afasy"
-  },
-  {
     "id": "116",
     "name": "Abdul Rahman Al-Sudais",
     "style": "",
@@ -80,19 +80,11 @@
     "audio_assets": "json/read/qul/surah-recitation-abdul-rahman-al-sudais"
   },
   {
-    "id": "338",
-    "name": "Abdullah Ali Jabir",
-    "style": "",
-    "format": "",
-    "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-abdullah-ali-jabir"
-  },
-  {
     "id": "379",
     "name": "Adel Kalbani",
     "style": "",
     "format": "",
-    "has_segments": true,
+    "has_segments": false,
     "audio_assets": "json/read/qul/surah-recitation-adel-kalbani"
   },
   {
@@ -104,14 +96,6 @@
     "audio_assets": "json/read/qul/surah-recitation-mahmoud-khaleel-al-husary"
   },
   {
-    "id": "332",
-    "name": "Mahmoud Khaleel Al-Husary (with Children)",
-    "style": "",
-    "format": "",
-    "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-mahmoud-khaleel-al-husary-with-children"
-  },
-  {
     "id": "328",
     "name": "Abdur-Rashid Sufi [Soosi]",
     "style": "",
@@ -120,27 +104,11 @@
     "audio_assets": "json/read/qul/surah-recitation-abdur-rashid-sufi-soosi"
   },
   {
-    "id": "343",
-    "name": "Adel Kalbani",
-    "style": "",
-    "format": "",
-    "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-adel-kalbani"
-  },
-  {
-    "id": "405",
-    "name": "Maher al-Muaiqly",
-    "style": "",
-    "format": "",
-    "has_segments": true,
-    "audio_assets": "json/read/qul/surah-recitation-maher-al-muaiqly"
-  },
-  {
     "id": "401",
     "name": "Noreen Siddiq [ad-Doori an Abi Amr]",
     "style": "",
     "format": "",
-    "has_segments": true,
+    "has_segments": false,
     "audio_assets": "json/read/qul/surah-recitation-noreen-siddiq-ad-doori-an-abi-amr"
   },
   {

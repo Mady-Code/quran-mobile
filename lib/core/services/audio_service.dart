@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../../features/quran/domain/entities/recitation.dart';
 import '../api/alquran_api.dart';
 import '../api/qul_service.dart';
@@ -52,25 +53,33 @@ class AudioService {
       String jsonString;
       try {
         jsonString = await rootBundle.loadString(audioJsonPath);
-      } catch (e) {
-        if (reciterId == '118' || reciterId == '418') { // Mishari fallback
-          jsonString = await rootBundle.loadString('assets/json/read/surahs_audio.json');
-          segmentsJsonPath = 'assets/json/read/segments.json';
-        } else {
-          rethrow;
-        }
-      }
-
-      final surahsAudioMappings = jsonDecode(jsonString) as Map<String, dynamic>;
-      surahsAudioMappings.forEach((key, value) {
-        final surahId = int.tryParse(key);
-        if (surahId != null && value['audio_url'] != null) {
-          _surahAudioUrls![surahId] = value['audio_url'];
-        }
-      });
+        final surahsAudioMappings = jsonDecode(jsonString) as Map<String, dynamic>;
+        surahsAudioMappings.forEach((key, value) {
+          final surahId = int.tryParse(key);
+          if (surahId != null && value['audio_url'] != null) {
+            _surahAudioUrls![surahId] = value['audio_url'];
+          }
+        });
       
-      final segmentsJsonString = await rootBundle.loadString(segmentsJsonPath);
-      _segmentsData = jsonDecode(segmentsJsonString);
+        final segmentsJsonString = await rootBundle.loadString(segmentsJsonPath);
+        _segmentsData = jsonDecode(segmentsJsonString);
+      } catch (e) {
+        // Afficher un petit message pour dire que le fichier n'a pas été trouvé
+        print('⚠️ Could not load recitation data for reciter $reciterName ($e)');
+        // Afficher un petit message pop up avec le message d'erreur a l'utilisateur
+        Fluttertoast.showToast(
+          msg: 'Could not load recitation data for reciter $reciterName',
+          toastLength: Toast.LENGTH_LONG,
+        );
+
+
+        // if (reciterId == '118' || reciterId == '418') { // Mishari fallback
+        //   jsonString = await rootBundle.loadString('assets/json/read/surahs_audio.json');
+        //   segmentsJsonPath = 'assets/json/read/segments.json';
+        // } else {
+        //   rethrow;
+        // }
+      }
       print('✅ Successfully loaded JSON data for reciter $reciterName');
     } catch (e) {
       print('⚠️ Fallback or no JSON data for reciter $reciterName ($e)');

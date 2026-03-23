@@ -46,6 +46,7 @@ dependencies:
   get_it: ^7.6.7
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  fluttertoast: ^8.2.4
 
 dev_dependencies:
   flutter_test:
@@ -87,7 +88,6 @@ flutter:
     - assets/json/read/qul/surah-recitation-ahmad-alnufais/
     - assets/json/read/qul/surah-recitation-hady-toure/
     - assets/json/read/qul/surah-recitation-maher-al-muaiqly/
-    - assets/json/read/qul/surah-recitation-mahmoud-khaleel-al-husary-with-children/
     - assets/json/read/qul/surah-recitation-mishari-rashid-al-afasy/
     - assets/json/read/qul/surah-recitation-noreen-siddiq-ad-doori-an-abi-amr/
     - assets/json/read/qul/surah-recitation-saad-ghamadi/

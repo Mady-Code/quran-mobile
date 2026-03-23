@@ -41,8 +41,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ── App bar ─────────────────────────────────────────────────────
           SliverAppBar(
             pinned: true,
-            title: const Text('Settings'),
-            backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+            title: const Text('Settings', style: TextStyle(color: Colors.white)),
+            backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.darkGreen,
           ),
 
           SliverPadding(
