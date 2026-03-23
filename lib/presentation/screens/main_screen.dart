@@ -3,7 +3,6 @@ import 'home_screen.dart';
 import 'mushaf_screen.dart';
 import 'audio_screen.dart';
 import 'settings_screen.dart';
-import '../widgets/mini_player.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -34,7 +33,6 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const MiniPlayer(),
           Container(
             decoration: BoxDecoration(
               border: Border(

@@ -57,7 +57,7 @@ class MushafPage extends StatelessWidget {
                             : const ColorFilter.mode(
                                 Colors.transparent, BlendMode.dst),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 25.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 28.0),
                           child: SvgPicture.asset(
                             imagePath,
                             // Ne pas étirer les pages 1 et 2 qui ont des bordures décoratives spéciales

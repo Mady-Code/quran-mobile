@@ -80,7 +80,26 @@ class QuranProvider with ChangeNotifier {
       return _versesCache[surahId]!;
     }
     try {
-      final verses = await _repository.getVerses(surahId);
+      var verses = await _repository.getVerses(surahId);
+      
+      // Fallback if empty: dynamically generate verses based on total verses
+      if (verses.isEmpty) {
+        final surah = _surahs.firstWhere(
+          (s) => s.id == surahId, 
+          orElse: () => const Surah(id: 0, nameSimple: '', nameArabic: '', versesCount: 0, revelationPlace: '', pages: [])
+        );
+        if (surah.versesCount > 0) {
+          verses = List.generate(surah.versesCount, (index) => Verse(
+            id: 0,
+            surahId: surahId,
+            verseNumber: index + 1,
+            verseKey: '$surahId:${index + 1}',
+            textUthmani: '',
+            pageNumber: 0,
+          ));
+        }
+      }
+      
       _versesCache[surahId] = verses;
       return verses;
     } catch (e) {
@@ -156,6 +175,17 @@ class QuranProvider with ChangeNotifier {
 
   Future<void> stopAudio() async {
     await _audioService.stop();
+  }
+
+  Future<void> playSurah(int surahId) async {
+    try {
+      final verses = await getVersesForSurah(surahId);
+      if (verses.isNotEmpty) {
+        await playAyah(verses.first);
+      }
+    } catch (e) {
+      print('Error playing surah: $e');
+    }
   }
 
   Future<void> seekAudio(Duration position) async {

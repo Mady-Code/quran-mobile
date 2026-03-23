@@ -26,14 +26,12 @@ class _MushafScreenState extends State<MushafScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _currentPage = widget.startPage ?? 1;
     _pageController = PageController(initialPage: _currentPage - 1);
   }
 
   @override
   void dispose() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _pageController.dispose();
     super.dispose();
   }
@@ -196,13 +194,14 @@ class _MushafScreenState extends State<MushafScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  // Retour
-                                  _OverlayButton(
-                                    icon: Icons.arrow_back_ios_new_rounded,
-                                    label: 'Retour',
-                                    color: iconColor,
-                                    onTap: () => Navigator.of(context).pop(),
-                                  ),
+                                  // Retour (seulement si on peut pop)
+                                  if (Navigator.canPop(context))
+                                    _OverlayButton(
+                                      icon: Icons.arrow_back_ios_new_rounded,
+                                      label: 'Retour',
+                                      color: iconColor,
+                                      onTap: () => Navigator.of(context).pop(),
+                                    ),
                                   // Recherche
                                   _OverlayButton(
                                     icon: Icons.search_rounded,

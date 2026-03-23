@@ -15,231 +15,222 @@ class AudioScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF121212) : AppTheme.creamColor;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.blackText;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? [const Color(0xFF1A1A1A), const Color(0xFF0F0F0F)]
-                : [AppTheme.creamColor, Colors.white],
-          ),
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'Lecteur Audio',
+          style: AppTheme.headingStyle.copyWith(color: textColor, fontSize: 18),
         ),
-        child: SafeArea(
-          child: Consumer<QuranProvider>(
-            builder: (context, provider, child) {
-              // ── Empty state ─────────────────────────────────────────────
-              if (!provider.isPlaying && provider.currentSurahName == null) {
-                return _buildEmptyState(context, isDark);
-              }
-              return _buildPlayerView(context, provider, isDark);
-            },
-          ),
+        iconTheme: IconThemeData(color: textColor),
+      ),
+      drawer: _buildSurahDrawer(context, isDark),
+      body: SafeArea(
+        child: Consumer<QuranProvider>(
+          builder: (context, provider, child) {
+            return Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: _buildPlayerView(context, provider, isDark),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, bool isDark) {
-    return Column(
-      children: [
-        // App bar area
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Text(
-                'Audio Player',
-                style: AppTheme.headingStyle.copyWith(
-                  color: isDark ? AppTheme.darkText : AppTheme.blackText,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: Center(
+  Widget _buildSurahDrawer(BuildContext context, bool isDark) {
+    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    return Drawer(
+      backgroundColor: bgColor,
+      child: Consumer<QuranProvider>(
+        builder: (context, provider, child) {
+          return SafeArea(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppTheme.goldColor.withOpacity(0.2),
-                        AppTheme.goldColor.withOpacity(0.04),
-                      ],
-                    ),
-                    border: Border.all(
-                        color: AppTheme.goldColor.withOpacity(0.3), width: 2),
-                  ),
-                  child: const Icon(Icons.music_note_rounded,
-                      size: 52, color: AppTheme.goldColor),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  'No Audio Playing',
-                  style: AppTheme.headingStyle.copyWith(
-                    fontSize: 20,
-                    color: isDark ? AppTheme.darkText : AppTheme.blackText,
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.library_music_rounded, color: AppTheme.goldColor, size: 28),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Choisir une Sourate',
+                        style: AppTheme.headingStyle.copyWith(
+                          fontSize: 20,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Select a surah to start listening',
-                  style: AppTheme.subtitleStyle.copyWith(fontSize: 14),
-                ),
-                const SizedBox(height: 40),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.library_music_outlined,
-                      color: AppTheme.goldColor),
-                  label: Text(
-                    'Browse Surahs',
-                    style: AppTheme.bodyStyle
-                        .copyWith(color: AppTheme.goldColor),
+                const Divider(),
+                Expanded(
+                  child: ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: provider.surahs.length,
+                    itemBuilder: (context, index) {
+                      final surah = provider.surahs[index];
+                      final isSelected = provider.currentSurahName == surah.nameSimple;
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? AppTheme.goldColor 
+                                : AppTheme.goldColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: isSelected && provider.isPlaying
+                              ? const Icon(Icons.graphic_eq_rounded, color: Colors.white, size: 18)
+                              : Text(
+                                  '${surah.id}',
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : AppTheme.goldColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                        title: Text(
+                          surah.nameSimple,
+                          style: AppTheme.headingStyle.copyWith(
+                            fontSize: 16,
+                            color: isSelected 
+                                ? AppTheme.goldColor 
+                                : (isDark ? Colors.white : Colors.black87),
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${surah.revelationPlace} • ${surah.versesCount} Versets',
+                          style: AppTheme.subtitleStyle.copyWith(fontSize: 12),
+                        ),
+                        trailing: Text(
+                          surah.nameArabic,
+                          style: AppTheme.arabicText.copyWith(
+                            fontSize: 18,
+                            color: AppTheme.goldColor,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context); // Close Drawer
+                          if (!isSelected || !provider.isPlaying) {
+                            provider.playSurah(surah.id);
+                          }
+                        },
+                      );
+                    },
                   ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.goldColor),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 28, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () {},
                 ),
               ],
             ),
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildPlayerView(
-      BuildContext context, QuranProvider provider, bool isDark) {
+  Widget _buildPlayerView(BuildContext context, QuranProvider provider, bool isDark) {
     final textColor = isDark ? AppTheme.darkText : AppTheme.blackText;
     final subtitleColor = isDark ? AppTheme.darkSubtitle : AppTheme.greyText;
 
-    return Column(
-      children: [
-        // ── AppBar area ───────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Album Art
+          _AlbumArt(isPlaying: provider.isPlaying, size: 280),
+          const SizedBox(height: 48),
+          
+          // Title
+          Text(
+            provider.currentSurahName ?? 'Ouvrez le menu pour choisir',
+            style: AppTheme.headingStyle.copyWith(
+              fontSize: provider.currentSurahName == null ? 20 : 28,
+              color: textColor,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 12),
+          
+          // Reciter Name
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Now Playing',
-                  style: AppTheme.headingStyle
-                      .copyWith(color: textColor, fontSize: 18)),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.graphic_eq_rounded,
-                        color: AppTheme.goldColor, size: 16),
-                    const SizedBox(width: 4),
-                    Text('Live',
-                        style: AppTheme.labelStyle.copyWith(
-                            color: AppTheme.goldColor,
-                            fontWeight: FontWeight.w700)),
-                  ],
+              const Icon(Icons.mic_rounded, size: 18, color: AppTheme.goldColor),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  provider.currentReciterName,
+                  style: AppTheme.subtitleStyle.copyWith(
+                    color: subtitleColor, 
+                    fontSize: 16,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-        ),
-
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-
-                // ── Album art ─────────────────────────────────────────────
-                _AlbumArt(isPlaying: provider.isPlaying),
-                const SizedBox(height: 36),
-
-                // ── Track info ────────────────────────────────────────────
-                Text(
-                  provider.currentSurahName ?? 'Surah',
-                  style: AppTheme.headingStyle.copyWith(
-                    fontSize: 24,
-                    color: textColor,
-                  ),
-                  textAlign: TextAlign.center,
+          
+          if (provider.currentVerseKey != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.goldColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppTheme.goldColor.withOpacity(0.3)),
+              ),
+              child: Text(
+                'Verset ${provider.currentVerseKey}',
+                style: TextStyle(
+                  color: AppTheme.goldColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.mic_rounded,
-                        size: 14, color: AppTheme.goldColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      provider.currentReciterName,
-                      style: AppTheme.subtitleStyle
-                          .copyWith(color: subtitleColor, fontSize: 14),
-                    ),
-                  ],
-                ),
-                if (provider.currentVerseKey != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.goldColor.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: AppTheme.goldColor.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      'Verse ${provider.currentVerseKey}',
-                      style: AppTheme.labelStyle.copyWith(
-                        color: AppTheme.goldColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 36),
-
-                // ── Progress bar ──────────────────────────────────────────
-                _ProgressBar(
-                  provider: provider,
-                  isDark: isDark,
-                  formatDuration: _formatDuration,
-                ),
-                const SizedBox(height: 32),
-
-                // ── Controls ──────────────────────────────────────────────
-                _Controls(provider: provider, isDark: isDark),
-                const SizedBox(height: 32),
-              ],
+              ),
             ),
+          ],
+          
+          const SizedBox(height: 48),
+          
+          // Progress bar
+          _ProgressBar(
+            provider: provider,
+            isDark: isDark,
+            formatDuration: _formatDuration,
           ),
-        ),
-      ],
+          
+          const SizedBox(height: 32),
+          
+          // Controls
+          _Controls(provider: provider, isDark: isDark),
+          const SizedBox(height: 48),
+        ],
+      ),
     );
   }
 }
 
 class _AlbumArt extends StatefulWidget {
   final bool isPlaying;
-  const _AlbumArt({required this.isPlaying});
+  final double size;
+  
+  const _AlbumArt({required this.isPlaying, this.size = 280});
 
   @override
   State<_AlbumArt> createState() => _AlbumArtState();
@@ -280,32 +271,25 @@ class _AlbumArtState extends State<_AlbumArt>
     return RotationTransition(
       turns: _rotateController,
       child: Container(
-        width: 200,
-        height: 200,
+        width: widget.size,
+        height: widget.size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const RadialGradient(
             center: Alignment(-0.3, -0.3),
-            colors: [
-              Color(0xFF3D8A57),
-              AppTheme.darkGreen,
-              Color(0xFF0F2D1C),
-            ],
+            colors: [Color(0xFF3D8A57), AppTheme.darkGreen, Color(0xFF0F2D1C)],
           ),
-          border: Border.all(
-            color: AppTheme.goldColor.withOpacity(0.6),
-            width: 2.5,
-          ),
+          border: Border.all(color: AppTheme.goldColor.withOpacity(0.6), width: 3),
           boxShadow: [
             BoxShadow(
               color: AppTheme.goldColor.withOpacity(0.25),
-              blurRadius: 40,
+              blurRadius: 30,
               spreadRadius: 4,
             ),
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
               blurRadius: 20,
-              offset: const Offset(0, 8),
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -314,33 +298,30 @@ class _AlbumArtState extends State<_AlbumArt>
           children: [
             // Decorative rings
             Container(
-              width: 150,
-              height: 150,
+              width: widget.size * 0.75,
+              height: widget.size * 0.75,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                    color: AppTheme.goldColor.withOpacity(0.2), width: 1),
+                border: Border.all(color: AppTheme.goldColor.withOpacity(0.2), width: 1.5),
               ),
             ),
             Container(
-              width: 100,
-              height: 100,
+              width: widget.size * 0.5,
+              height: widget.size * 0.5,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                    color: AppTheme.goldColor.withOpacity(0.15), width: 1),
+                border: Border.all(color: AppTheme.goldColor.withOpacity(0.15), width: 1.5),
               ),
             ),
             // Center icon
             Container(
-              width: 60,
-              height: 60,
+              width: widget.size * 0.3,
+              height: widget.size * 0.3,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.black.withOpacity(0.4),
               ),
-              child: const Icon(Icons.mosque_rounded,
-                  size: 30, color: AppTheme.goldColor),
+              child: Icon(Icons.mosque_rounded, size: widget.size * 0.15, color: AppTheme.goldColor),
             ),
           ],
         ),
@@ -382,10 +363,8 @@ class _ProgressBar extends StatelessWidget {
                     activeTrackColor: AppTheme.goldColor,
                     inactiveTrackColor: AppTheme.goldColor.withOpacity(0.2),
                     thumbColor: AppTheme.goldColor,
-                    thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 8),
-                    overlayShape:
-                        const RoundSliderOverlayShape(overlayRadius: 18),
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
                     trackHeight: 4,
                   ),
                   child: Slider(
@@ -393,8 +372,7 @@ class _ProgressBar extends StatelessWidget {
                     onChanged: duration.inMilliseconds > 0
                         ? (value) {
                             final newPos = Duration(
-                              milliseconds:
-                                  (value * duration.inMilliseconds).round(),
+                              milliseconds: (value * duration.inMilliseconds).round(),
                             );
                             provider.seekAudio(newPos);
                           }
@@ -409,19 +387,15 @@ class _ProgressBar extends StatelessWidget {
                       Text(
                         formatDuration(clamped),
                         style: AppTheme.labelStyle.copyWith(
-                          color: isDark
-                              ? AppTheme.darkSubtitle
-                              : AppTheme.greyText,
-                          fontSize: 12,
+                          color: isDark ? AppTheme.darkSubtitle : AppTheme.greyText,
+                          fontSize: 13,
                         ),
                       ),
                       Text(
                         formatDuration(duration),
                         style: AppTheme.labelStyle.copyWith(
-                          color: isDark
-                              ? AppTheme.darkSubtitle
-                              : AppTheme.greyText,
-                          fontSize: 12,
+                          color: isDark ? AppTheme.darkSubtitle : AppTheme.greyText,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -449,51 +423,44 @@ class _Controls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Previous verse
         _ControlButton(
           icon: Icons.skip_previous_rounded,
-          size: 32,
+          size: 36,
           color: iconColor,
           onTap: provider.skipToPreviousVerse,
-          tooltip: 'Previous verse',
+          tooltip: 'Verset précédent',
         ),
-        const SizedBox(width: 20),
-
-        // Play / Pause (primary)
+        const SizedBox(width: 32),
         GestureDetector(
           onTap: provider.isPlaying ? provider.pauseAudio : provider.resumeAudio,
           child: Container(
-            width: 72,
-            height: 72,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppTheme.goldColor,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.goldColor.withOpacity(0.45),
+                  color: AppTheme.goldColor.withOpacity(0.4),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Icon(
-              provider.isPlaying
-                  ? Icons.pause_rounded
-                  : Icons.play_arrow_rounded,
+              provider.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: Colors.white,
-              size: 38,
+              size: 42,
             ),
           ),
         ),
-        const SizedBox(width: 20),
-
-        // Next verse
+        const SizedBox(width: 32),
         _ControlButton(
           icon: Icons.skip_next_rounded,
-          size: 32,
+          size: 36,
           color: iconColor,
           onTap: provider.skipToNextVerse,
-          tooltip: 'Next verse',
+          tooltip: 'Verset suivant',
         ),
       ],
     );
@@ -523,7 +490,7 @@ class _ControlButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(40),
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           child: Icon(icon, size: size, color: color),
         ),
       ),
